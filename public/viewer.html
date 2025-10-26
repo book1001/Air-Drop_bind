@@ -1,0 +1,471 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Plane Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+    }
+    #content {
+      margin: 30px auto;
+      padding: 20px;
+      max-width: 800px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background: #222;
+      min-height: 300px;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      background: #444;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+    }
+    button:hover {
+      background: #666;
+    }
+    .disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 id="title">Plane Viewer</h1>
+
+  <div id="content">Loading...</div>
+
+  <div>
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next</button>
+  </div>
+
+  <script>
+    const MAX_PLANES = 64;
+    let currentPlaneId = 0;
+
+    const titleEl = document.getElementById("title");
+    const contentEl = document.getElementById("content");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function updateButtons() {
+      prevBtn.classList.toggle("disabled", currentPlaneId === 0);
+      nextBtn.classList.toggle("disabled", currentPlaneId === MAX_PLANES - 1);
+    }
+
+async function loadPlane(planeId) {
+  const fileUrl = `/plane_${planeId}.json`; // ✅ 수정됨
+
+  try {
+    const res = await fetch(fileUrl);
+    if (!res.ok) throw new Error("File not found");
+
+    const data = await res.json();
+
+    titleEl.textContent = `Plane ${planeId}`;
+
+    if (Array.isArray(data) && data.length > 0) {
+      contentEl.textContent = data.join("\n");
+    } else {
+      contentEl.textContent = "(No data yet)";
+    }
+
+  } catch (error) {
+    titleEl.textContent = `Plane ${planeId}`;
+    contentEl.textContent = "(No data yet)";
+  }
+
+  updateButtons();
+}
+
+
+    prevBtn.addEventListener("click", () => {
+      if (currentPlaneId > 0) {
+        currentPlaneId--;
+        loadPlane(currentPlaneId);
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentPlaneId < MAX_PLANES - 1) {
+        currentPlaneId++;
+        loadPlane(currentPlaneId);
+      }
+    });
+
+    // 처음 시작
+    loadPlane(currentPlaneId);
+  </script>
+</body>
+</html> -->
+
+<!-- ========================================================== -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Plane Viewer</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  body { font-family: sans-serif; padding: 20px; }
+  #inputs { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin-bottom: 20px; }
+  input { padding: 5px; width: 100%; box-sizing: border-box; }
+  button { padding: 10px 20px; margin-right: 10px; }
+  #pageIndicator { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Plane Viewer</h1>
+<div id="inputs"></div>
+
+<div>
+  <button id="prevBtn">Prev</button>
+  <button id="nextBtn">Next</button>
+  <span id="pageIndicator">Page 1 / 64</span>
+</div>
+
+<script>
+const socket = io();
+
+const totalPlanes = 64;
+const inputsCount = 180;
+let currentPlane = 0;
+
+const inputsContainer = document.getElementById("inputs");
+const pageIndicator = document.getElementById("pageIndicator");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+// input 생성
+const inputElements = [];
+for (let i = 0; i < inputsCount; i++) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = `Input ${i+1}`;
+  input.dataset.index = i;
+  inputsContainer.appendChild(input);
+  inputElements.push(input);
+
+  // 실시간 읽기/쓰기
+  input.addEventListener("input", (e) => {
+    const index = parseInt(e.target.dataset.index);
+    const value = e.target.value;
+
+    // 서버에 변경 전송
+    socket.emit("inputChange", {
+      planeId: currentPlane,
+      inputIndex: index,
+      value
+    });
+  });
+}
+
+// 페이지 로드
+function loadPlane(planeId) {
+  currentPlane = planeId;
+  pageIndicator.textContent = `Page ${currentPlane + 1} / ${totalPlanes}`;
+  socket.emit("requestPlaneData", currentPlane);
+}
+
+// 서버에서 데이터 수신 (페이지 로딩)
+socket.on("loadPlaneData", ({ planeId, data }) => {
+  if (planeId !== currentPlane) return;
+  for (let i = 0; i < inputsCount; i++) {
+    inputElements[i].value = data[`input${i}`] || '';
+  }
+});
+
+// 다른 브라우저에서 데이터 변경 시 실시간 반영
+socket.on("updateInput", ({ planeId, inputIndex, value }) => {
+  if (planeId === currentPlane) {
+    const idx = parseInt(inputIndex);
+    const input = inputElements[idx];
+    if(input) input.value = value || '';
+  }
+});
+
+// Prev/Next 버튼
+prevBtn.addEventListener("click", () => {
+  if (currentPlane > 0) loadPlane(currentPlane - 1);
+});
+nextBtn.addEventListener("click", () => {
+  if (currentPlane < totalPlanes - 1) loadPlane(currentPlane + 1);
+});
+
+// 초기 페이지
+loadPlane(0);
+
+</script>
+</body>
+</html> -->
+<!-- ========================================================== -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Plane Viewer eBook Drag</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+  #book {
+    position: relative;
+    width: 800px;
+    height: 400px;
+    perspective: 2000px;
+    margin: 0 auto 20px;
+    touch-action: pan-y;
+  }
+  .page {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transform-style: preserve-3d;
+    transform-origin: left;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+    padding: 20px;
+    box-sizing: border-box;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  input { padding: 5px; width: 100%; box-sizing: border-box; }
+  button { padding: 10px 20px; margin-right: 10px; }
+  #pageIndicator { font-weight: bold; display: inline-block; margin-left: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Plane Viewer eBook</h1>
+<div id="book">
+  <div class="page" id="currentPage"></div>
+  <div class="page" id="nextPage"></div>
+</div>
+
+<div style="display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+  <button id="prevBtn">Prev</button>
+  <input type="range" id="pageSlider" min="0" max="63" value="0" style="margin:0 15px; flex:1;">
+  <button id="nextBtn">Next</button>
+  <span id="pageIndicator">Page 1 / 64</span>
+</div>
+
+<script>
+const socket = io();
+
+const totalPlanes = 64;
+const inputsCount = 180;
+let currentPlane = 0;
+
+const currentPage = document.getElementById("currentPage");
+const nextPage = document.getElementById("nextPage");
+const pageIndicator = document.getElementById("pageIndicator");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const book = document.getElementById("book");
+
+let isAnimating = false;
+
+// input 요소 생성
+const createInputs = (container) => {
+  container.innerHTML = '';
+  const inputs = [];
+  for(let i=0; i<inputsCount; i++){
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = `Input ${i+1}`;
+    input.dataset.index = i;
+    container.appendChild(input);
+    inputs.push(input);
+
+    input.addEventListener("input", (e)=>{
+      const index = parseInt(e.target.dataset.index);
+      const value = e.target.value;
+      socket.emit("inputChange", { planeId: currentPlane, inputIndex: index, value });
+    });
+  }
+  return inputs;
+}
+
+let currentInputs = createInputs(currentPage);
+let nextInputs = createInputs(nextPage);
+
+// 페이지 로드
+function loadPlane(planeId) {
+  if(planeId < 0 || planeId >= totalPlanes || isAnimating) return;
+  currentPlane = planeId;
+  pageIndicator.textContent = `Page ${currentPlane + 1} / ${totalPlanes}`;
+  socket.emit("requestPlaneData", planeId);
+}
+
+// 서버 데이터 수신
+socket.on("loadPlaneData", ({ planeId, data }) => {
+  if(planeId !== currentPlane) return;
+  for(let i=0;i<inputsCount;i++){
+    currentInputs[i].value = data[`input${i}`] || '';
+  }
+});
+
+// 실시간 동기화
+socket.on("updateInput", ({ planeId, inputIndex, value }) => {
+  if(planeId === currentPlane){
+    currentInputs[inputIndex].value = value || '';
+  }
+});
+
+// Prev/Next 버튼
+prevBtn.addEventListener("click", ()=> startFlip("prev"));
+nextBtn.addEventListener("click", ()=> startFlip("next"));
+
+const pageSlider = document.getElementById("pageSlider");
+
+// 슬라이더 드래그 중 페이지 전환 비율 계산
+let sliderDragging = false;
+let sliderTargetPlane = currentPlane;
+
+pageSlider.addEventListener("mousedown", () => { sliderDragging = true; });
+pageSlider.addEventListener("mouseup", () => { sliderDragging = false; flipToPage(sliderTargetPlane); });
+pageSlider.addEventListener("touchstart", () => { sliderDragging = true; });
+pageSlider.addEventListener("touchend", () => { sliderDragging = false; flipToPage(sliderTargetPlane); });
+
+pageSlider.addEventListener("input", (e) => {
+  sliderTargetPlane = parseInt(e.target.value);
+  // 실시간 페이지 번호 업데이트
+  pageIndicator.textContent = `Page ${sliderTargetPlane + 1} / ${totalPlanes}`;
+
+  if(sliderTargetPlane === currentPlane || isAnimating) return;
+
+  // 회전 비율 계산
+  const direction = sliderTargetPlane > currentPlane ? "next" : "prev";
+  const percent = Math.abs(sliderTargetPlane - currentPlane);
+
+  nextPage.style.transition = "none";
+  nextPage.style.transformOrigin = direction==="next" ? "left" : "right";
+  nextPage.style.transform = direction==="next" 
+    ? `rotateY(${-180 * Math.min(percent,1)}deg)` 
+    : `rotateY(${180 * Math.min(percent,1)}deg)`;
+});
+
+// 페이지 넘기기 (슬라이더 끝까지 드래그 시)
+function flipToPage(targetPlane){
+  if(isAnimating) return;
+  if(targetPlane < 0 || targetPlane >= totalPlanes) return;
+
+  isAnimating = true;
+  const direction = targetPlane > currentPlane ? "next" : "prev";
+
+  nextPage.style.transition = "transform 0.6s cubic-bezier(0.4,0,0.2,1)";
+  nextPage.style.transformOrigin = direction==="next" ? "left" : "right";
+  nextPage.style.transform = "rotateY(0deg)";
+
+  socket.emit("requestPlaneData", targetPlane);
+
+  setTimeout(()=>{
+    currentPlane = targetPlane;
+    pageIndicator.textContent = `Page ${currentPlane+1} / ${totalPlanes}`;
+    pageSlider.value = currentPlane;
+    [currentPage.innerHTML, nextPage.innerHTML] = [nextPage.innerHTML, currentPage.innerHTML];
+    [currentInputs, nextInputs] = [nextInputs, currentInputs];
+    nextPage.style.transition = "none";
+    nextPage.style.transform = direction==="next" ? "rotateY(-180deg)" : "rotateY(180deg)";
+    isAnimating = false;
+  }, 650);
+}
+
+// Prev/Next 버튼
+prevBtn.addEventListener("click", ()=> flipToPage(currentPlane-1));
+nextBtn.addEventListener("click", ()=> flipToPage(currentPlane+1));
+
+
+
+// 드래그/스와이프 변수
+let startX = 0;
+let deltaX = 0;
+let dragging = false;
+
+// 드래그 시작
+const handleStart = (x) => { if(isAnimating) return; startX=x; dragging=true; };
+const handleMove = (x) => {
+  if(!dragging || isAnimating) return;
+  deltaX = x - startX;
+  const percent = Math.max(-1, Math.min(1, deltaX / book.clientWidth));
+  nextPage.style.transition = "none";
+  nextPage.style.transformOrigin = percent < 0 ? "right" : "left";
+  nextPage.style.transform = `rotateY(${percent * -180}deg)`;
+};
+
+// 드래그 끝
+const handleEnd = () => {
+  if(!dragging || isAnimating) return;
+  dragging=false;
+  if(deltaX < -100) startFlip("next");
+  else if(deltaX > 100) startFlip("prev");
+  else {
+    // 원위치
+    nextPage.style.transition = "transform 0.3s";
+    nextPage.style.transform = deltaX < 0 ? "rotateY(-180deg)" : "rotateY(180deg)";
+  }
+  deltaX = 0;
+};
+
+// 페이지 넘기기
+function startFlip(direction){
+  if(isAnimating) return;
+  isAnimating = true;
+  const targetPlane = direction === "next" ? currentPlane + 1 : currentPlane - 1;
+  if(targetPlane < 0 || targetPlane >= totalPlanes){ isAnimating=false; return; }
+
+  nextPage.style.transition = "transform 0.6s cubic-bezier(0.4,0,0.2,1)";
+  nextPage.style.transformOrigin = direction==="next" ? "left" : "right";
+  nextPage.style.transform = "rotateY(0deg)";
+
+  socket.emit("requestPlaneData", targetPlane);
+
+  setTimeout(()=>{
+    currentPlane = targetPlane;
+    pageIndicator.textContent = `Page ${currentPlane + 1} / ${totalPlanes}`;
+    [currentPage.innerHTML, nextPage.innerHTML] = [nextPage.innerHTML, currentPage.innerHTML];
+    [currentInputs, nextInputs] = [nextInputs, currentInputs];
+    nextPage.style.transition = "none";
+    nextPage.style.transform = direction==="next" ? "rotateY(-180deg)" : "rotateY(180deg)";
+    isAnimating = false;
+  }, 650);
+}
+
+// 드래그 이벤트
+book.addEventListener("mousedown", e => handleStart(e.clientX));
+book.addEventListener("mousemove", e => handleMove(e.clientX));
+book.addEventListener("mouseup", handleEnd);
+book.addEventListener("mouseleave", handleEnd);
+
+book.addEventListener("touchstart", e => handleStart(e.touches[0].clientX));
+book.addEventListener("touchmove", e => handleMove(e.touches[0].clientX));
+book.addEventListener("touchend", handleEnd);
+
+// 초기 페이지
+loadPlane(0);
+
+</script>
+</body>
+</html>
+
+

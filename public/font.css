@@ -1,0 +1,19 @@
+/* font: import ================================================ */
+@font-face {
+  font-family: 'ReadyActive-light';
+  src: url('./font/ReadyActiveTest-Light.woff2') format('woff2');
+  src: url('./font/ReadyActiveTest-Light.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'FKGroteskMonoTrial-Regular';
+  src: url('./font/FKGroteskMonoTrial-Regular.woff2') format('woff2');
+  src: url('./font/FKGroteskMonoTrial-Regular.woff') format('woff');
+}
+
+h1 {
+  margin-block-start: 0;
+  margin-block-end: 0.67em;
+  font-family: 'ReadyActive-light';
+  font-size: 92px;
+}

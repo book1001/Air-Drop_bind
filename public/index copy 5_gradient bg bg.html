@@ -1,0 +1,596 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crisp Inputs in CSS3DRenderer</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #cssRenderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* --- plane-wrapper --- */
+  .plane-wrapper {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* --- input field --- */
+  .inputPlane {
+    width: 6px;
+    height: 9px;
+    padding: 0;
+    margin: 0;
+    font-size: 6px;
+    line-height: 9px;
+    text-align: center;
+    font-family: monospace;
+    border: none;
+    color: #fff;
+    background: transparent;
+    pointer-events: auto;
+    outline: none;
+
+    /* ✨ 핵심: 흐림 제거 */
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+    backface-visibility: hidden;
+  }
+
+  /* 포커스 시에도 blur 안 생김 */
+  .inputPlane:focus {
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+let scene, camera, webGLRenderer, cssRenderer, sphereGroup;
+let rotationX = 0, rotationY = 0;
+const speed = 0.02;
+const keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 0);
+
+  webGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(webGLRenderer.domElement);
+
+  cssRenderer = new CSS3DRenderer();
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.domElement.id = "cssRenderer";
+  document.body.appendChild(cssRenderer.domElement);
+
+  sphereGroup = new THREE.Group();
+  scene.add(sphereGroup);
+
+  const radius = 150;
+  const minPlaneSize = 80;
+  const latitudes = Math.ceil(Math.PI * radius / minPlaneSize);
+  const planeSize = Math.PI * radius / latitudes;
+
+  let inputCount = 1;
+
+  for (let i = 0; i <= latitudes; i++) {
+    const theta = i * Math.PI / latitudes;
+    const y = radius * Math.cos(theta);
+    const r = radius * Math.sin(theta);
+    const longitudes = r === 0 ? 1 : Math.ceil(2 * Math.PI * r / planeSize);
+
+    for (let j = 0; j < longitudes; j++) {
+      const phi = j * 2 * Math.PI / longitudes;
+      const x = r * Math.cos(phi);
+      const z = r * Math.sin(phi);
+
+      // WebGL 평면
+      const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
+      const material = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide});
+      // const material = new THREE.MeshBasicMaterial({ visible: false });
+      const plane = new THREE.Mesh(geometry, material);
+      plane.position.set(x, y, z);
+      plane.lookAt(0, 0, 0);
+      sphereGroup.add(plane);
+
+      const div = document.createElement('div');
+      div.className = 'plane-wrapper';
+      div.style.width = planeSize + 'px';
+      div.style.height = planeSize + 'px';
+
+      const inputsPerPlane = 120;
+      for (let k = 0; k < inputsPerPlane; k++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 1;
+        input.className = 'inputPlane';
+        input.id = 'input' + (inputCount++);
+        div.appendChild(input);
+        if (input.id === 'input1') setTimeout(() => input.focus(), 300);
+      }
+
+      const object = new CSS3DObject(div);
+      object.position.set(x, y, z);
+      object.lookAt(0, 0, 0);
+      sphereGroup.add(object);
+    }
+  }
+
+  window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+  window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (keys.ArrowUp) rotationX -= speed;
+  if (keys.ArrowDown) rotationX += speed;
+  if (keys.ArrowLeft) rotationY -= speed;
+  if (keys.ArrowRight) rotationY += speed;
+
+  sphereGroup.rotation.x = rotationX;
+  sphereGroup.rotation.y = rotationY;
+
+  webGLRenderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
+}
+</script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crisp Inputs in CSS3DRenderer</title>
+<style>
+  body {
+    margin: 0;
+    background: blue;
+    /* background-image: url("img/sky_1.jpg"); */
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #cssRenderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* --- plane-wrapper --- */
+  .plane-wrapper {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    border: 1px solid white;
+  }
+
+  /* --- input field --- */
+  .inputPlane {
+    width: 6px;
+    height: 9px;
+    padding: 0;
+    margin: 0;
+    font-size: 6px;
+    line-height: 9px;
+    text-align: center;
+    font-family: monospace;
+    text-transform: uppercase;
+    border: 1px solid white;
+    border: none;
+    color: #fff;
+    background: transparent;
+    pointer-events: auto;
+    outline: none;
+
+    /* ✨ 핵심: 흐림 제거 */
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+    backface-visibility: hidden;
+  }
+
+  /* 포커스 시에도 blur 안 생김 */
+  .inputPlane:focus {
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+  }
+
+  .input-texted {
+    position: relative;
+    /* animation: float 3s ease-in-out infinite; */
+    animation: float-3d 3s infinite ease-in-out alternate;
+  }
+
+  @keyframes float {
+      0% {
+          transform: translateY(0);
+      }
+
+      50% {
+          transform: translateY(-20px);
+      }
+
+      100% {
+          transform: translateY(0);
+      }
+  }
+
+  @keyframes float-3d {
+    from {
+      transform: translateZ(0) rotateX(0deg); /* Starting position and rotation */
+    }
+    to {
+      transform: translateZ(20px) rotateX(10deg); /* Floating closer and tilting */
+    }
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+let scene, camera, webGLRenderer, cssRenderer, sphereGroup, backgroundMesh, texture, ctx, canvas;
+let rotationX = 0, rotationY = 0;
+const speed = 0.02;
+const keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 0);
+
+  webGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(webGLRenderer.domElement);
+
+  cssRenderer = new CSS3DRenderer();
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.domElement.id = "cssRenderer";
+  document.body.appendChild(cssRenderer.domElement);
+
+  sphereGroup = new THREE.Group();
+  scene.add(sphereGroup);
+
+  // 🌈 Canvas Gradient 배경
+  canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  ctx = canvas.getContext('2d');
+
+  texture = new THREE.CanvasTexture(canvas);
+  const geometry = new THREE.SphereGeometry(500, 60, 40);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.BackSide
+  });
+  backgroundMesh = new THREE.Mesh(geometry, material);
+  sphereGroup.add(backgroundMesh);
+
+  // // --------------------------
+  // // 🌈 Canvas Gradient 배경
+  // const canvas = document.createElement('canvas');
+  // canvas.width = 1024;
+  // canvas.height = 512;
+  // const ctx = canvas.getContext('2d');
+
+  // const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+  // gradient.addColorStop(0, '#00264d');   // 어두운 파랑
+  // gradient.addColorStop(0.5, '#3366cc'); // 중간 파랑
+  // gradient.addColorStop(1, '#66ccff');   // 밝은 하늘색
+
+  // ctx.fillStyle = gradient;
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // const texture = new THREE.CanvasTexture(canvas);
+  // const geometry = new THREE.SphereGeometry(500, 60, 40);
+  // const material = new THREE.MeshBasicMaterial({
+  //   map: texture,
+  //   side: THREE.BackSide
+  // });
+  // backgroundMesh = new THREE.Mesh(geometry, material);
+  // sphereGroup.add(backgroundMesh);
+  // // --------------------------
+
+  // // init() 안 webGLRenderer 추가 직후에 배경용 구체 생성
+  // const loader = new THREE.TextureLoader();
+  // loader.load('img/blue_1.jpeg', function(texture) {
+  //   const geometry = new THREE.SphereGeometry(500, 60, 40);
+  //   const material = new THREE.MeshBasicMaterial({
+  //     map: texture,
+  //     side: THREE.BackSide
+  //   });
+  //   backgroundMesh = new THREE.Mesh(geometry, material);
+  //   sphereGroup.add(backgroundMesh); // 배경도 sphereGroup에 포함
+  // });
+
+  const radius = 150;
+  const minPlaneSize = 80;
+  const latitudes = Math.ceil(Math.PI * radius / minPlaneSize);
+  const planeSize = Math.PI * radius / latitudes;
+
+  let inputCount = 1;
+
+  for (let i = 0; i <= latitudes; i++) {
+    const theta = i * Math.PI / latitudes;
+    const y = radius * Math.cos(theta);
+    const r = radius * Math.sin(theta);
+    const longitudes = r === 0 ? 1 : Math.ceil(2 * Math.PI * r / planeSize);
+
+    for (let j = 0; j < longitudes; j++) {
+      const phi = j * 2 * Math.PI / longitudes;
+      const x = r * Math.cos(phi);
+      const z = r * Math.sin(phi);
+
+      // WebGL 평면
+      const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
+      // const material = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide});
+      const material = new THREE.MeshBasicMaterial({ visible: false });
+      const plane = new THREE.Mesh(geometry, material);
+      plane.position.set(x, y, z);
+      plane.lookAt(0, 0, 0);
+      sphereGroup.add(plane);
+
+      const div = document.createElement('div');
+      div.className = 'plane-wrapper';
+      div.style.width = planeSize + 'px';
+      div.style.height = planeSize + 'px';
+
+      const inputsPerPlane = 120;
+      for (let k = 0; k < inputsPerPlane; k++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 1;
+        input.className = 'inputPlane';
+        input.id = 'input' + (inputCount++);
+
+        // 입력 이벤트 (사용자가 글자를 입력할 때)\
+        // input.addEventListener('input', () => {
+        //   // 현재 input 선택
+        //   input.select();
+
+        //   // 글자 상태 반영
+        //   if (input.value.trim() !== '') {
+        //     input.classList.add('input-texted');
+        //     // 다음 input으로 자동 포커스
+        //     const nextInput = document.getElementById('input' + (parseInt(input.id.replace('input','')) + 1));
+        //     if (nextInput) nextInput.focus();
+        //   } else {
+        //     input.classList.remove('input-texted');
+        //   }
+        // });
+
+let isComposing = false;
+
+input.addEventListener('compositionstart', () => {
+  isComposing = true;
+});
+
+input.addEventListener('compositionend', () => {
+  isComposing = false;
+
+  // 글자 완료 처리: 현재 input에 입력 확정
+  input.classList.remove('focused');
+  input.classList.add('input-texted');
+
+  // 다음 input으로 포커스 이동
+  const nextIndex = parseInt(input.id.replace('input', '')) + 1;
+  const nextInput = document.getElementById('input' + nextIndex);
+
+  if (nextInput) {
+    // 다음 input에서 IME 조합이 시작되도록 약간 딜레이
+    setTimeout(() => {
+      nextInput.focus();
+      nextInput.select();
+    }, 0);
+  }
+});
+
+// 일반 input 이벤트 처리 (영문 등)
+input.addEventListener('input', (e) => {
+  if (!isComposing && input.value.trim() !== '') {
+    input.classList.remove('focused');
+    input.classList.add('input-texted');
+
+    const nextIndex = parseInt(input.id.replace('input', '')) + 1;
+    const nextInput = document.getElementById('input' + nextIndex);
+
+    if (nextInput) {
+      setTimeout(() => {
+        nextInput.focus();
+        nextInput.select();
+      }, 0);
+    }
+  } else if (input.value.trim() === '') {
+    input.classList.remove('input-texted');
+  }
+});
+
+
+
+
+
+
+
+
+        // 포커스 이벤트
+        input.addEventListener('focus', () => {
+          input.classList.remove('input-texted');
+          input.classList.add('focused');
+        });
+
+        // 블러 이벤트 (포커스 해제 시)
+        input.addEventListener('blur', () => {
+          input.classList.remove('focused');
+          if (input.value.trim() !== '') {
+            input.classList.add('input-texted');
+          }
+        });
+
+        // 입력 이벤트 (사용자가 글자를 입력할 때)
+        input.addEventListener('input', () => {
+          if (input.value.trim() !== '') {
+            input.classList.remove('focused');
+            input.classList.add('input-texted');
+          } else {
+            input.classList.remove('input-texted');
+          }
+        });
+
+        div.appendChild(input);
+      }
+
+
+      const object = new CSS3DObject(div);
+      object.position.set(x, y, z);
+      object.lookAt(0, 0, 0);
+      sphereGroup.add(object);
+    }
+  }
+
+  window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+  window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// 🎨 그라디언트 갱신 함수
+function updateGradient(time) {
+  const hue1 = (time * 0.02) % 360;
+  const hue2 = (hue1 + 60) % 360;
+  const hue3 = (hue1 + 120) % 360;
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, `hsl(${hue1}, 80%, 50%)`);
+  gradient.addColorStop(0.5, `hsl(${hue2}, 80%, 50%)`);
+  gradient.addColorStop(1, `hsl(${hue3}, 80%, 60%)`);
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  texture.needsUpdate = true;
+}
+
+function animate(time = 0) {
+  requestAnimationFrame(animate);
+
+  // 화살표 키 회전
+  if (keys.ArrowUp) rotationX -= speed;
+  if (keys.ArrowDown) rotationX += speed;
+  if (keys.ArrowLeft) rotationY -= speed;
+  if (keys.ArrowRight) rotationY += speed;
+
+  sphereGroup.rotation.x = rotationX;
+  sphereGroup.rotation.y = rotationY;
+
+  // 배경 그라디언트 갱신
+  updateGradient(time);
+
+  webGLRenderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
+}
+</script>
+</body>
+</html>

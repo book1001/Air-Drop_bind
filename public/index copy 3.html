@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive 3D Sphere</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+    perspective: 1200px;
+    overflow: hidden;
+  }
+
+  .sphere {
+    position: relative;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+  }
+
+  .plane {
+    position: absolute;
+    background: linear-gradient(45deg, #f06, #a0f);
+    transform-origin: center center;
+    box-sizing: border-box;
+    border: 1px solid #111;
+    backface-visibility: visible; /* 뒤쪽도 보이게 */
+  }
+</style>
+</head>
+<body>
+
+<div class="sphere" id="sphere"></div>
+
+<script>
+const sphere = document.getElementById('sphere');
+const radius = 150;        
+const minPlaneSize = 80;   
+const latitudes = Math.ceil(Math.PI * radius / minPlaneSize); 
+const planeSize = Math.PI * radius / latitudes; 
+
+// 평면 생성
+for (let i = 0; i <= latitudes; i++) {
+  const theta = i * Math.PI / latitudes;
+  const y = radius * Math.cos(theta);
+  const r = radius * Math.sin(theta);
+  const longitudes = r === 0 ? 1 : Math.ceil(2 * Math.PI * r / planeSize);
+
+  for (let j = 0; j < longitudes; j++) {
+    const phi = j * 2 * Math.PI / longitudes;
+
+    const x = r * Math.cos(phi);
+    const z = r * Math.sin(phi);
+
+    const rotY = Math.atan2(x, z) * 180 / Math.PI;
+    const distance = Math.sqrt(x*x + z*z);
+    const rotX = -Math.atan2(y, distance) * 180 / Math.PI;
+
+    const plane = document.createElement('div');
+    plane.className = 'plane';
+    plane.style.width = `${planeSize}px`;
+    plane.style.height = `${planeSize}px`;
+    plane.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+    sphere.appendChild(plane);
+  }
+}
+
+// 회전 상태
+let rotationX = 0;
+let rotationY = 0;
+const speed = 1; // 회전 속도
+const keys = {ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false};
+
+function updateRotation() {
+  if(keys.ArrowUp) rotationX -= speed;
+  if(keys.ArrowDown) rotationX += speed;
+  if(keys.ArrowLeft) rotationY -= speed;
+  if(keys.ArrowRight) rotationY += speed;
+
+  sphere.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+  requestAnimationFrame(updateRotation);
+}
+updateRotation();
+
+// 키 이벤트
+window.addEventListener('keydown', e => {
+  if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+});
+window.addEventListener('keyup', e => {
+  if(keys.hasOwnProperty(e.key)) keys[e.key] = false;
+});
+</script>
+
+</body>
+</html>

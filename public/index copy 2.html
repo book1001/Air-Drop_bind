@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Normal Visual Sphere with Editable Text</title>
+<style>
+  body { margin:0; overflow:hidden; background:#000; }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script>
+(() => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 2000);
+  camera.position.set(0,0,0);
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Sphere: 법선 기반 색상
+  const sphereRadius = 600;
+  // const sphereGeometry = new THREE.SphereGeometry(sphereRadius, 64, 64);
+  // const sphereMaterial = new THREE.MeshNormalMaterial({side: THREE.BackSide});
+  // const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  const tex = new THREE.TextureLoader().load('https://threejs.org/examples/textures/uv_grid_opengl.jpg');
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(sphereRadius, 64, 64),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide })
+  );
+  scene.add(sphere);
+
+  // Raycaster
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  // Rotation
+  const state = {left:false,right:false,up:false,down:false};
+  const ROT_SPEED = 0.9;
+  let targetFov = camera.fov;
+  const ZOOM_STEP=5, ZOOM_MIN=20, ZOOM_MAX=120, ZOOM_SMOOTHNESS=0.08;
+
+  window.addEventListener('keydown', e=>{
+    const cmd = e.metaKey||e.ctrlKey;
+    if(cmd && e.key==="ArrowUp"){ targetFov=Math.max(ZOOM_MIN,targetFov-ZOOM_STEP); e.preventDefault(); return; }
+    if(cmd && e.key==="ArrowDown"){ targetFov=Math.min(ZOOM_MAX,targetFov+ZOOM_STEP); e.preventDefault(); return; }
+    if(e.key==="ArrowLeft") state.left=true;
+    if(e.key==="ArrowRight") state.right=true;
+    if(e.key==="ArrowUp") state.up=true;
+    if(e.key==="ArrowDown") state.down=true;
+  });
+  window.addEventListener('keyup', e=>{
+    if(e.key==="ArrowLeft") state.left=false;
+    if(e.key==="ArrowRight") state.right=false;
+    if(e.key==="ArrowUp") state.up=false;
+    if(e.key==="ArrowDown") state.down=false;
+  });
+
+  // Text Sprites
+  const textSprites = [];
+
+  function createTextSprite(text){
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='white';
+    ctx.font='48px sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(text, canvas.width/2, canvas.height/2);
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({map:texture, depthTest:false});
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(128,32,1);
+    sprite.userData.text = text;
+    return sprite;
+  }
+
+  // Editable logic
+  let editingSprite = null;
+  let inputBuffer = "";
+
+  function startEditing(sprite){
+    editingSprite = sprite;
+    inputBuffer = sprite.userData.text || "";
+  }
+
+  window.addEventListener('click', e=>{
+    mouse.x = (e.clientX/window.innerWidth)*2 -1;
+    mouse.y = -(e.clientY/window.innerHeight)*2 +1;
+    raycaster.setFromCamera(mouse,camera);
+
+    const intersects = raycaster.intersectObject(sphere);
+    if(intersects.length>0){
+        // 구 표면 클릭 → 새 스프라이트 생성
+        const localPos = sphere.worldToLocal(intersects[0].point.clone());
+        const sprite = createTextSprite("");
+        sprite.position.copy(localPos);
+        sphere.add(sprite);
+        textSprites.push(sprite);
+        startEditing(sprite); // 편집 시작
+        return;
+    }
+
+    // 기존 텍스트 스프라이트 클릭 체크
+    let found = false;
+    textSprites.forEach(s=>{
+        const projected = s.position.clone().project(camera);
+        const sx = (projected.x+1)/2 * window.innerWidth;
+        const sy = (1-projected.y)/2 * window.innerHeight;
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        if(Math.sqrt(dx*dx+dy*dy)<60){
+            startEditing(s); // 클릭한 스프라이트 편집 시작
+            found = true;
+        }
+    });
+
+    if(!found){
+        editingSprite = null; // 아무것도 클릭 안 하면 편집 종료
+    }
+});
+
+
+  window.addEventListener('keydown', e=>{
+    if(editingSprite){
+      if(e.key.length===1){
+        inputBuffer+=e.key;
+      } else if(e.key==="Backspace"){
+        inputBuffer = inputBuffer.slice(0,-1);
+      } else if(e.key==="Enter"){
+        editingSprite.userData.text = inputBuffer;
+        editingSprite=null;
+        e.preventDefault();
+        return;
+      }
+      const canvas = editingSprite.material.map.image;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillText(inputBuffer, canvas.width/2, canvas.height/2);
+      editingSprite.material.map.needsUpdate = true;
+      editingSprite.userData.text = inputBuffer;
+      e.preventDefault();
+    }
+  });
+
+  // Animate
+  let last = performance.now();
+  function animate(now){
+    const dt = (now-last)/1000; last=now;
+    let yaw=0,pitch=0;
+    if(state.left) yaw+=ROT_SPEED*dt;
+    if(state.right) yaw-=ROT_SPEED*dt;
+    if(state.up) pitch+=ROT_SPEED*dt;
+    if(state.down) pitch-=ROT_SPEED*dt;
+    sphere.rotateX(pitch);
+    sphere.rotateY(yaw);
+
+    camera.fov += (targetFov-camera.fov)*ZOOM_SMOOTHNESS;
+    camera.updateProjectionMatrix();
+
+    renderer.render(scene,camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  
+
+})();
+</script>
+</body>
+</html>
