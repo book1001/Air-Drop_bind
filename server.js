@@ -193,14 +193,22 @@ const path = require("path");
 const inputsCount = 180;
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static("pages"));
+// ✅ 기본 페이지를 index.html로 서빙
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+
+// ✅ plane JSON 읽기
+app.get("/pages/:file", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/pages", req.params.file));
+});
 
 io.on("connection", (socket) => {
   console.log("A user connected ✅");
 
   // 클라이언트가 plane 데이터 요청
   socket.on("requestPlaneData", (planeId) => {
-    const filePath = path.join(__dirname, "pages", `plane_${planeId}.json`);
+    const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
     let data = {};
 
     if (fs.existsSync(filePath)) {
@@ -216,7 +224,7 @@ io.on("connection", (socket) => {
 
   // 입력 변경: 모든 클라이언트에 broadcast
   socket.on("inputChange", ({ planeId, inputIndex, value }) => {
-    const filePath = path.join(__dirname, "pages", `plane_${planeId}.json`);
+    const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
     let data = {};
 
     if(fs.existsSync(filePath)){
