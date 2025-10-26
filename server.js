@@ -192,21 +192,26 @@ const path = require("path");
 
 const inputsCount = 180;
 
+// 포트는 DO에서 주는 환경변수 사용
+const PORT = process.env.PORT || 8080;
+
+// Static 파일 서빙
 app.use(express.static(path.join(__dirname, "public")));
-// ✅ 기본 페이지를 index.html로 서빙
+
+// Health Check용 기본 라우트
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  res.send("OK");
 });
 
-// ✅ plane JSON 읽기
+// Plane JSON 읽기
 app.get("/pages/:file", (req, res) => {
   res.sendFile(path.join(__dirname, "public/pages", req.params.file));
 });
 
+// Socket.io
 io.on("connection", (socket) => {
   console.log("A user connected ✅");
 
-  // 클라이언트가 plane 데이터 요청
   socket.on("requestPlaneData", (planeId) => {
     const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
     let data = {};
@@ -222,7 +227,6 @@ io.on("connection", (socket) => {
     socket.emit("loadPlaneData", { planeId, data });
   });
 
-  // 입력 변경: 모든 클라이언트에 broadcast
   socket.on("inputChange", ({ planeId, inputIndex, value }) => {
     const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
     let data = {};
@@ -241,9 +245,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", ()=> console.log("A user disconnected ❌"));
 });
 
-
-// 서버 실행
-const PORT = 8080;
-http.listen(PORT, "127.0.0.1", () => {
-  console.log(`✅ Server running at http://127.0.0.1:${PORT}/`);
+// 🔑 중요한 수정: 0.0.0.0으로 바인딩
+http.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running at http://0.0.0.0:${PORT}/`);
 });
