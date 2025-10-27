@@ -328,7 +328,7 @@
 
           for(let k=0;k<inputsCount;k++){
             const input=document.createElement('input');
-            input.type='text'; input.maxLength=1;
+            input.type='text'; 
             input.className='inputPlane';
             input.id='input'+(inputCount);
             div.appendChild(input);
@@ -370,29 +370,393 @@
       requestAllPages();
       
       // 윈도우 이벤트
-      window.addEventListener('keydown', (e) => {
-        if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        const currentInput = document.activeElement;
-        const currentIndex = allInputs.indexOf(currentInput);
-        if(e.key === 'ArrowRight'){ rotationY += speed; if(currentIndex >= 0 && currentIndex < allInputs.length - 1){ e.preventDefault(); allInputs[currentIndex + 1].focus(); } }
-        else if(e.key === 'ArrowLeft'){ rotationY -= speed; if(currentIndex > 0){ e.preventDefault(); allInputs[currentIndex - 1].focus(); } }
-      });
-      window.addEventListener('keyup', (e)=>{ if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+      // window.addEventListener('keydown', (e) => {
+      //   if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+      //   const currentInput = document.activeElement;
+      //   const currentIndex = allInputs.indexOf(currentInput);
+      //   if(e.key === 'ArrowRight'){ rotationY += speed; if(currentIndex >= 0 && currentIndex < allInputs.length - 1){ e.preventDefault(); allInputs[currentIndex + 1].focus(); } }
+      //   else if(e.key === 'ArrowLeft'){ rotationY -= speed; if(currentIndex > 0){ e.preventDefault(); allInputs[currentIndex - 1].focus(); } }
+      // });
+      // window.addEventListener('keyup', (e)=>{ if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
       window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); webGLRenderer.setSize(window.innerWidth, window.innerHeight); cssRenderer.setSize(window.innerWidth, window.innerHeight); });
     } // init()
 
 
     // --- Input Event Setup ---
-    function setupInput(input, pageId, inputIndex){
-      let isComposing=false;
-      input.addEventListener('compositionstart',()=>isComposing=true);
-      input.addEventListener('compositionend',()=>isComposing=false);
-      input.addEventListener('input',()=>{
-        if(isComposing) return;
-        socket.emit('inputChange',{pageId,inputIndex,value:input.value});
-        input.value.trim()!=='' ? input.classList.add('input-texted') : input.classList.remove('input-texted');
+
+    function setupInput(input, pageId, inputIndex) {
+      let isComposing = false;
+      let composedText = "";
+
+      // 입력 옵션
+      input.inputMode = 'text';
+      input.autocapitalize = 'off';
+      input.autocorrect = 'off';
+      input.spellcheck = false;
+      input.style.imeMode = 'active'; // IME 사용 가능
+
+      input.addEventListener("compositionstart", () => {
+        isComposing = true;
+        composedText = "";
+        input.value = ""; // 조합 시작 시 입력 숨김
       });
+
+      input.addEventListener("compositionupdate", (e) => {
+        isComposing = true;
+        composedText = e.data; // 현재 조합 중인 문자열 저장
+        input.value = ""; // 영어/한자 조합 문자 표시 금지
+      });
+
+      input.addEventListener("compositionend", (e) => {
+        isComposing = false;
+        composedText = e.data || composedText;
+        // input.value = ""; // 화면에 표시하지 않음
+
+        if (composedText.length > 0) {
+          distributeCharacters(composedText);
+          composedText = "";
+        }
+      });
+
+      input.addEventListener("input", () => {
+        if (isComposing) return; // 조합 중이면 무시
+
+        const val = input.value;
+        if (val.trim() === "") return;
+
+        distributeCharacters(val);
+      });
+
+      input.addEventListener("keydown", (e) => {
+        const currentIndex = allInputs.indexOf(input);
+
+        // 백스페이스 처리 (keyCode 8)
+        if (e.keyCode === 8 && input.value === "") {
+          e.preventDefault();
+          if (currentIndex > 0) {
+            const prevInput = allInputs[currentIndex - 1];
+            prevInput.value = ""; // 이전 input 삭제
+            prevInput.classList.remove("input-texted");
+
+            socket.emit("inputChange", {
+              pageId,
+              inputIndex: currentIndex - 1,
+              value: ""
+            });
+
+            prevInput.focus();
+          }
+        }
+
+        // 스페이스 처리 → 다음 input으로 이동 (keyCode 32)
+        if (e.keyCode === 32) {
+          e.preventDefault();
+          if (currentIndex < allInputs.length - 1) {
+            allInputs[currentIndex + 1].focus();
+          }
+        }
+      });
+
+      function distributeCharacters(text) {
+        const chars = [...text]; // 한자, 한글, 이모지 모두 처리
+        let currentIndex = allInputs.indexOf(input);
+
+        chars.forEach((ch) => {
+          if (currentIndex >= allInputs.length) return;
+
+          const target = allInputs[currentIndex];
+          target.value = ch;
+          target.classList.add("input-texted");
+
+          socket.emit("inputChange", {
+            pageId,
+            inputIndex: currentIndex,
+            value: ch
+          });
+
+          currentIndex++;
+        });
+
+        // 마지막 입력 후 포커스 이동
+        if (currentIndex < allInputs.length) {
+          allInputs[currentIndex].focus();
+        } else {
+          allInputs[allInputs.length - 1].focus();
+        }
+      }
     }
+
+
+
+    // function setupInput(input, pageId, inputIndex) {
+    //   let isComposing = false;
+    //   let composedText = "";
+
+    //   // 입력 옵션
+    //   input.inputMode = 'text';
+    //   input.autocapitalize = 'off';
+    //   input.autocorrect = 'off';
+    //   input.spellcheck = false;
+    //   input.style.imeMode = 'active'; // IME 사용 가능
+
+    //   input.addEventListener("compositionstart", () => {
+    //     isComposing = true;
+    //     composedText = "";
+    //     input.value = ""; // 조합 시작 시 입력 숨김
+    //   });
+
+    //   input.addEventListener("compositionupdate", (e) => {
+    //     isComposing = true;
+    //     composedText = e.data; // 현재 조합 중인 문자열 저장
+    //     input.value = ""; // 영어/한자 조합 문자 표시 금지
+    //   });
+
+    //   input.addEventListener("compositionend", (e) => {
+    //     isComposing = false;
+    //     composedText = e.data || composedText;
+    //     // input.value = ""; // 화면에 표시하지 않음
+
+    //     if (composedText.length > 0) {
+    //       distributeCharacters(composedText);
+    //       composedText = "";
+    //     }
+    //   });
+
+    //   input.addEventListener("input", () => {
+    //     if (isComposing) return; // 조합 중이면 무시
+
+    //     const val = input.value;
+    //     if (val.trim() === "") return;
+
+    //     distributeCharacters(val);
+    //   });
+
+    //   input.addEventListener("keydown", (e) => {
+    //     const currentIndex = allInputs.indexOf(input);
+
+    //     // 백스페이스 처리 (keyCode 8)
+    //     if (e.keyCode === 8 && input.value === "") {
+    //       e.preventDefault();
+    //       if (currentIndex > 0) {
+    //         const prevInput = allInputs[currentIndex - 1];
+    //         prevInput.value = ""; // 이전 input 삭제
+    //         prevInput.classList.remove("input-texted");
+
+    //         socket.emit("inputChange", {
+    //           pageId,
+    //           inputIndex: currentIndex - 1,
+    //           value: ""
+    //         });
+
+    //         prevInput.focus();
+    //       }
+    //     }
+
+    //     // 스페이스 처리 → 다음 input으로 이동 (keyCode 32)
+    //     if (e.keyCode === 32) {
+    //       e.preventDefault();
+    //       if (currentIndex < allInputs.length - 1) {
+    //         allInputs[currentIndex + 1].focus();
+    //       }
+    //     }
+    //   });
+
+
+    //   function distributeCharacters(text) {
+    //     const chars = [...text]; // 한자, 한글, 이모지 모두 처리
+    //     let currentIndex = allInputs.indexOf(input);
+
+    //     chars.forEach((ch) => {
+    //       if (currentIndex >= allInputs.length) return;
+
+    //       const target = allInputs[currentIndex];
+    //       target.value = ch;
+    //       target.classList.add("input-texted");
+
+    //       socket.emit("inputChange", {
+    //         pageId,
+    //         inputIndex: currentIndex,
+    //         value: ch
+    //       });
+
+    //       currentIndex++;
+    //     });
+
+    //     // 마지막 입력 후 포커스 이동
+    //     if (currentIndex < allInputs.length) {
+    //       allInputs[currentIndex].focus();
+    //     } else {
+    //       allInputs[allInputs.length - 1].focus();
+    //     }
+    //   }
+    // }
+
+
+    // function setupInput(input, pageId, inputIndex) {
+    //   let isComposing = false;
+    //   let composedText = "";
+
+    //   // 입력 옵션
+    //   input.inputMode = 'text';
+    //   input.autocapitalize = 'off';
+    //   input.autocorrect = 'off';
+    //   input.spellcheck = false;
+    //   input.style.imeMode = 'active'; // IME 사용 가능
+
+    //   input.addEventListener("compositionstart", () => {
+    //     isComposing = true;
+    //     composedText = "";
+    //     input.value = ""; // 조합 시작 시 입력 숨김
+    //   });
+
+    //   input.addEventListener("compositionupdate", (e) => {
+    //     isComposing = true;
+    //     composedText = e.data; // 현재 조합 중인 문자열 저장
+    //     input.value = ""; // 영어/한자 조합 문자 표시 금지
+    //   });
+
+    //   input.addEventListener("compositionend", (e) => {
+    //     isComposing = false;
+    //     composedText = e.data || composedText;
+    //     input.value = ""; // 화면에 표시하지 않음
+
+    //     if (composedText.length > 0) {
+    //       distributeCharacters(composedText);
+    //       composedText = "";
+    //     }
+    //   });
+
+    //   input.addEventListener("input", () => {
+    //     if (isComposing) return; // 조합 중이면 무시
+
+    //     const val = input.value;
+    //     if (val.trim() === "") return;
+
+    //     distributeCharacters(val);
+    //   });
+
+    //   input.addEventListener("keydown", (e) => {
+    //     const currentIndex = allInputs.indexOf(input);
+
+    //     // 백스페이스 처리 (keyCode 8)
+    //     if (e.keyCode === 8 && input.value === "") {
+    //       e.preventDefault();
+    //       if (currentIndex > 0) {
+    //         const prevInput = allInputs[currentIndex - 1];
+    //         prevInput.value = ""; // 이전 input 삭제
+    //         prevInput.classList.remove("input-texted");
+
+    //         socket.emit("inputChange", {
+    //           pageId,
+    //           inputIndex: currentIndex - 1,
+    //           value: ""
+    //         });
+
+    //         prevInput.focus();
+    //       }
+    //     }
+
+    //     // 스페이스 처리 → 다음 input으로 이동 (keyCode 32)
+    //     if (e.keyCode === 32) {
+    //       e.preventDefault();
+    //       if (currentIndex < allInputs.length - 1) {
+    //         allInputs[currentIndex + 1].focus();
+    //       }
+    //     }
+    //   });
+
+
+    //   function distributeCharacters(text) {
+    //     const chars = [...text]; // 한자, 한글, 이모지 모두 처리
+    //     let currentIndex = allInputs.indexOf(input);
+
+    //     chars.forEach((ch) => {
+    //       if (currentIndex >= allInputs.length) return;
+
+    //       const target = allInputs[currentIndex];
+    //       target.value = ch;
+    //       target.classList.add("input-texted");
+
+    //       socket.emit("inputChange", {
+    //         pageId,
+    //         inputIndex: currentIndex,
+    //         value: ch
+    //       });
+
+    //       currentIndex++;
+    //     });
+
+    //     // 마지막 입력 후 포커스 이동
+    //     if (currentIndex < allInputs.length) {
+    //       allInputs[currentIndex].focus();
+    //     } else {
+    //       allInputs[allInputs.length - 1].focus();
+    //     }
+    //   }
+    // }
+
+
+
+
+    // function setupInput(input, pageId, inputIndex){
+    //   let isComposing = false;
+
+    //   input.addEventListener('compositionstart', () => isComposing = true);
+    //   input.addEventListener('compositionend', () => isComposing = false);
+
+    //   input.addEventListener('input', (e) => {
+    //     if(isComposing) return;
+
+    //     // ✅ 현재 상태 업데이트 서버로 전송
+    //     socket.emit('inputChange', { pageId, inputIndex, value: input.value });
+
+    //     // ✅ 스타일 토글
+    //     input.value.trim() !== '' 
+    //       ? input.classList.add('input-texted')
+    //       : input.classList.remove('input-texted');
+
+    //     const currentIndex = allInputs.indexOf(input);
+
+    //     // ✅ 한 글자 입력 후 자동 이동
+    //     if(input.value.length === 1 && currentIndex < allInputs.length - 1){
+    //       allInputs[currentIndex + 1].focus();
+    //     }
+    //   });
+
+    //   input.addEventListener('keydown', (e) => {
+    //     const currentIndex = allInputs.indexOf(input);
+
+    //     // ✅ 백스페이스 시 이전 input으로 이동
+    //     if(e.key === 'Backspace' && input.value === '' && currentIndex > 0){
+    //       e.preventDefault();
+    //       const prev = allInputs[currentIndex - 1];
+    //       prev.focus();
+    //       prev.value = ''; // 원하면 삭제 유지
+    //       socket.emit('inputChange', { pageId, inputIndex: currentIndex - 1, value: '' });
+    //     }
+
+    //     // ✅ 좌우 화살표 이동 지원 (기존 적용 유지)
+    //     if(e.key === 'ArrowLeft' && currentIndex > 0){
+    //       e.preventDefault();
+    //       allInputs[currentIndex - 1].focus();
+    //     }
+    //     if(e.key === 'ArrowRight' && currentIndex < allInputs.length - 1){
+    //       e.preventDefault();
+    //       allInputs[currentIndex + 1].focus();
+    //     }
+    //   });
+    // }
+
+    // function setupInput(input, pageId, inputIndex){
+    //   let isComposing=false;
+    //   input.addEventListener('compositionstart',()=>isComposing=true);
+    //   input.addEventListener('compositionend',()=>isComposing=false);
+    //   input.addEventListener('input',()=>{
+    //     if(isComposing) return;
+    //     socket.emit('inputChange',{pageId,inputIndex,value:input.value});
+    //     input.value.trim()!=='' ? input.classList.add('input-texted') : input.classList.remove('input-texted');
+    //   });
+    // }
 
     // --- 요청 ---
     function requestAllPages(){
