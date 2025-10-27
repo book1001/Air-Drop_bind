@@ -215,21 +215,20 @@ loadPlane(0);
 <!-- ========================================================== -->
 
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Bind the Air</title>
-<!-- <link rel="shortcut icon" href="favicon.png"> -->
 
 <script src="/socket.io/socket.io.js"></script>
 <style>
-  body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+  body { font-family: sans-serif; padding: 20px; background: #ccfbff; }
   #book {
     position: relative;
-    width: 800px;
-    height: 400px;
+    width: 500px;
+    height: 800px;
     perspective: 2000px;
     margin: 0 auto 20px;
     touch-action: pan-y;
@@ -238,7 +237,6 @@ loadPlane(0);
     position: absolute;
     width: 100%;
     height: 100%;
-    background: white;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     transform-style: preserve-3d;
     transform-origin: left;
@@ -247,29 +245,46 @@ loadPlane(0);
     gap: 5px;
     padding: 20px;
     box-sizing: border-box;
-    border-left: 1px solid #ccc;
+    /* border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
-    border-radius: 2px;
+    border-radius: 2px; */
+    border: 4px solid white;
     overflow: hidden;
   }
-  input { padding: 5px; width: 100%; box-sizing: border-box; }
+  input { 
+    padding: 0;
+    margin: 0;
+    width: 100%; 
+    box-sizing: border-box;
+    color: gray;
+    background: transparent;
+    border: none;
+    outline: none;
+  }
   button { padding: 10px 20px; margin-right: 10px; }
-  #pageIndicator { font-weight: bold; display: inline-block; margin-left: 20px; }
+  #pageIndicator { 
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    font-weight: bold; 
+    display: inline-block;
+    margin-left: 20px; 
+    color: white;
+  }
 </style>
 </head>
 <body>
 
-<h1>Plane Viewer eBook</h1>
 <div id="book">
   <div class="page" id="currentPage"></div>
   <div class="page" id="nextPage"></div>
+  <span id="pageIndicator">Page 1 / 64</span>
 </div>
 
 <div style="display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
   <button id="prevBtn">Prev</button>
-  <input type="range" id="pageSlider" min="0" max="63" value="0" style="margin:0 15px; flex:1;">
+  <input type="range" id="pageSlider" value="0" style="flex:1;">
   <button id="nextBtn">Next</button>
-  <span id="pageIndicator">Page 1 / 64</span>
 </div>
 
 <script>
@@ -294,8 +309,8 @@ const createInputs = (container) => {
   const inputs = [];
   for(let i=0; i<inputsCount; i++){
     const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = `Input ${i+1}`;
+    input.type = 'text'; input.maxLength=1;
+    // input.placeholder = `Input ${i+1}`;
     input.dataset.index = i;
     container.appendChild(input);
     inputs.push(input);
@@ -469,6 +484,575 @@ loadPlane(0);
 
 </script>
 </body>
+</html> -->
+
+
+
+<!-- ========================================================== -->
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bind the Air</title>
+
+<link rel="stylesheet" href="font.css">
+<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="index_detail.css">
+<link rel="stylesheet" href="index_media.css">
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+  body { margin: 0; padding: 0; background: #ccfbff; }
+  #cover {
+    display: none;
+    position: absolute;
+    padding: 20px;
+  }
+  #cover-back {
+    display: none;
+    position: absolute;
+    padding: 20px;
+  }
+  #inputs { 
+    position: relative;
+    padding: 20px;
+    display: grid; 
+    grid-template-columns: 
+    repeat(10, 1fr); 
+    gap: 0;
+    border: 4px solid white;
+    width: 500px;
+    height: 800px;
+  }
+  input { 
+    margin: 0; 
+    width: 100%;
+    box-sizing: border-box; 
+    color: gray;
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+  button { padding: 10px 20px; margin-right: 10px; }
+  #pageIndicator { 
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-block;
+    color: white;
+  }
+  #controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  #pageSlider {
+    flex: 1;
+  }
+</style>
+</head>
+<body>
+<div id="book">
+
+  <div class="page" id="currentPage">
+    <div id="inputs">
+      <div id="cover">
+        <h1>
+          Bind the Air
+        </h1>
+        <p>
+          Bind the Air is a continuation of Air–Drop, which was exhibited last May at the Open M Art Fair in Hangzhou. This volume was inspired by the abC team’s reflection: “If we could read the messages that each of us dropped into the air, Air–Drop could become a book we all create together.”
+
+          In this project, the words we release into the air are gathered and bound into a book, binding us together across distances and borders. Visitors are invited to drift through a globe-shaped sky and leave messages wherever they wish. Each part of the sky is marked not by latitude or longitude, but by page numbers. By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices, forming a book that can be flipped through and read.
+          
+          Throughout the exhibition, not only those in Shenzhen but people from all corners of the world are welcome to leave their messages. Together, as a global community, we bind the air into a shared book, turning borders into pages that connect us.
+        </p>
+      </div>
+      <span id="pageIndicator">Page 1 / 64</span>
+      <div id="cover-back">
+        <p>
+          Published By Halim Lee  
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="prevBtn">Prev</button>
+  <input type="range" id="pageSlider" min="0" max="65" value="0">
+  <button id="nextBtn">Next</button>
+  <button id="printBtn">Print</button>
+</div>
+
+<script>
+const socket = io();
+
+const totalPlanes = 66; // 0~65
+const inputsCount = 180;
+let currentPlane = 0;
+
+const coverContainer = document.getElementById("cover");
+const backcoverContainer = document.getElementById("cover-back");
+const inputsContainer = document.getElementById("inputs");
+const pageIndicator = document.getElementById("pageIndicator");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const pageSlider = document.getElementById("pageSlider");
+
+// input 생성
+const inputElements = [];
+for (let i = 0; i < inputsCount; i++) {
+  const input = document.createElement("input");
+  input.type = "text"; 
+  input.maxLength = 1;
+  input.dataset.index = i;
+  inputsContainer.appendChild(input);
+  inputElements.push(input);
+
+  input.addEventListener("input", (e) => {
+    const index = parseInt(e.target.dataset.index);
+    const value = e.target.value;
+
+    // Plane JSON 페이지일 때만 서버 전송
+    if (currentPlane >= 1 && currentPlane <= 64) {
+      socket.emit("inputChange", {
+        planeId: currentPlane,
+        inputIndex: index,
+        value
+      });
+    }
+  });
+}
+
+// 페이지 로드
+function loadPlane(planeId) {
+  if (planeId < 0) planeId = 0;
+  if (planeId >= totalPlanes) planeId = totalPlanes -1;
+
+  currentPlane = planeId;
+  pageIndicator.textContent = `Page ${currentPlane + 1} / ${totalPlanes}`;
+  pageSlider.value = currentPlane;
+
+  // 표지와 뒷표지 처리
+  if (currentPlane === 0) {
+    // 표지
+    coverContainer.style.display = "block"; 
+    backcoverContainer.style.display = "none"; 
+    inputElements.forEach(input => input.style.display = "none");
+  } else if (currentPlane === totalPlanes - 1) {
+    // 뒷표지
+    coverContainer.style.display = "none"; 
+    backcoverContainer.style.display = "block"; 
+    inputElements.forEach(input => input.style.display = "none");
+  } else {
+    // Plane JSON 페이지
+    coverContainer.style.display = "none"; 
+    backcoverContainer.style.display = "none"; 
+    inputElements.forEach(input => input.style.display = "block");
+
+    socket.emit("requestPlaneData", currentPlane);
+  }
+}
+
+
+// 서버에서 데이터 수신 (페이지 로딩)
+socket.on("loadPlaneData", ({ planeId, data }) => {
+  if (planeId !== currentPlane) return;
+  for (let i = 0; i < inputsCount; i++) {
+    inputElements[i].value = data[`input${i}`] || '';
+  }
+});
+
+// 다른 브라우저에서 데이터 변경 시 실시간 반영
+socket.on("updateInput", ({ planeId, inputIndex, value }) => {
+  if (planeId === currentPlane) {
+    const idx = parseInt(inputIndex);
+    const input = inputElements[idx];
+    if(input) input.value = value || '';
+  }
+});
+
+// Prev/Next 버튼
+prevBtn.addEventListener("click", () => loadPlane(currentPlane - 1));
+nextBtn.addEventListener("click", () => loadPlane(currentPlane + 1));
+
+// 슬라이더 이벤트
+pageSlider.addEventListener("input", (e) => {
+  loadPlane(parseInt(e.target.value));
+});
+
+// 초기 페이지
+loadPlane(0);
+
+</script>
+</body>
+</html> -->
+<!-- ========================================================== -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bind the Air</title>
+
+<link rel="stylesheet" href="font.css">
+<!-- <link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="index_detail.css">
+<link rel="stylesheet" href="index_media.css"> -->
+
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- jsPDF & html2canvas 추가 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body { margin: 0; padding: 0; background: #ccfbff; }
+  #cover {
+    display: none;
+    position: absolute;
+    padding: 20px;
+  }
+  #cover-back {
+    display: none;
+    position: absolute;
+    padding: 20px;
+  }
+  #inputs { 
+    position: relative;
+    padding: 20px;
+    display: grid; 
+    grid-template-columns: 
+    repeat(10, 1fr); 
+    gap: 0;
+    border: 4px solid white;
+    width: 500px;
+    height: 800px;
+  }
+  input { 
+    margin: 0; 
+    width: 100%;
+    box-sizing: border-box; 
+    color: gray;
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+  button { padding: 10px 20px; margin-right: 10px; }
+  #pageIndicator { 
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-block;
+    color: white;
+  }
+  #controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  #pageSlider {
+    flex: 1;
+  }
+</style>
+</head>
+<body>
+<div id="book">
+
+  <div class="page" id="currentPage">
+    <div id="inputs">
+      <div id="cover">
+        <h1>
+          Bind the Air
+        </h1>
+        <p>
+          Bind the Air is a continuation of Air–Drop, which was exhibited last May at the Open M Art Fair in Hangzhou. This volume was inspired by the abC team’s reflection: “If we could read the messages that each of us dropped into the air, Air–Drop could become a book we all create together.”
+
+          In this project, the words we release into the air are gathered and bound into a book, binding us together across distances and borders. Visitors are invited to drift through a globe-shaped sky and leave messages wherever they wish. Each part of the sky is marked not by latitude or longitude, but by page numbers. By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices, forming a book that can be flipped through and read.
+          
+          Throughout the exhibition, not only those in Shenzhen but people from all corners of the world are welcome to leave their messages. Together, as a global community, we bind the air into a shared book, turning borders into pages that connect us.
+        </p>
+      </div>
+      <span id="pageIndicator">Page 1 / 64</span>
+      <div id="cover-back">
+        <p>
+          Published By Halim Lee  
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="prevBtn">Prev</button>
+  <input type="range" id="pageSlider" min="0" max="65" value="0">
+  <button id="nextBtn">Next</button>
+  <button id="saveBtn">Save</button>
+</div>
+
+
+
+<script>
+const socket = io();
+
+const totalPages = 66; // 0~65
+const inputsCount = 180;
+let currentPage = 0;
+
+const coverContainer = document.getElementById("cover");
+const backcoverContainer = document.getElementById("cover-back");
+const inputsContainer = document.getElementById("inputs");
+const pageIndicator = document.getElementById("pageIndicator");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const pageSlider = document.getElementById("pageSlider");
+
+// input 생성
+const inputElements = [];
+for (let i = 0; i < inputsCount; i++) {
+  const input = document.createElement("input");
+  input.type = "text"; 
+  input.maxLength = 1;
+  input.dataset.index = i;
+  inputsContainer.appendChild(input);
+  inputElements.push(input);
+
+  input.addEventListener("input", (e) => {
+    const index = parseInt(e.target.dataset.index);
+    const value = e.target.value;
+
+    // 페이지 JSON 처리: 표지/뒷표지 제외
+    if (currentPage >= 1 && currentPage <= totalPages - 2) {
+      socket.emit("inputChange", {
+        pageId: currentPage,
+        inputIndex: index,
+        value
+      });
+    }
+  });
+}
+
+// 페이지 로드
+function loadPage(pageId) {
+  if (pageId < 0) pageId = 0;
+  if (pageId >= totalPages) pageId = totalPages -1;
+
+  currentPage = pageId;
+
+  // 페이지 번호 표시 (표지/뒷표지 제외)
+  if (currentPage === 0 || currentPage === totalPages - 1) {
+    pageIndicator.style.display = "none";
+  } else {
+    pageIndicator.style.display = "inline-block";
+    pageIndicator.textContent = `${currentPage}`;
+    // pageIndicator.textContent = `Page ${currentPage} / ${totalPages}`;
+  }
+
+  pageSlider.value = currentPage;
+
+  // 표지/뒷표지 처리
+  if (currentPage === 0) {
+    coverContainer.style.display = "block"; 
+    backcoverContainer.style.display = "none"; 
+    inputElements.forEach(input => input.style.display = "none");
+  } else if (currentPage === totalPages - 1) {
+    coverContainer.style.display = "none"; 
+    backcoverContainer.style.display = "block"; 
+    inputElements.forEach(input => input.style.display = "none");
+  } else {
+    coverContainer.style.display = "none"; 
+    backcoverContainer.style.display = "none"; 
+    inputElements.forEach(input => input.style.display = "block");
+
+    // 서버에서 페이지 데이터 요청
+    socket.emit("requestPlaneData", currentPage);
+  }
+}
+
+// 서버에서 페이지 데이터 수신
+socket.on("loadPlaneData", ({ pageId, data }) => {
+  if (pageId !== currentPage) return;
+  for (let i = 0; i < inputsCount; i++) {
+    inputElements[i].value = data[`input${i}`] || '';
+  }
+});
+
+// 다른 브라우저에서 데이터 변경 시 실시간 반영
+socket.on("updateInput", ({ pageId, inputIndex, value }) => {
+  if (pageId === currentPage) {
+    const idx = parseInt(inputIndex);
+    const input = inputElements[idx];
+    if(input) input.value = value || '';
+  }
+});
+
+// Prev/Next 버튼
+prevBtn.addEventListener("click", () => loadPage(currentPage - 1));
+nextBtn.addEventListener("click", () => loadPage(currentPage + 1));
+
+// 슬라이더 이벤트
+pageSlider.addEventListener("input", (e) => {
+  loadPage(parseInt(e.target.value));
+});
+
+// 초기 페이지
+loadPage(0);
+</script>
+
+<script>
+const saveBtn = document.getElementById("saveBtn");
+const totalBodyPages = 64; // JSON 페이지 수
+
+// 표지 내용
+const coverText = `
+Bind the Air
+
+Bind the Air is a continuation of Air–Drop, which was exhibited last May at the Open M Art Fair in Hangzhou. This volume was inspired by the abC team’s reflection: “If we could read the messages that each of us dropped into the air, Air–Drop could become a book we all create together.”
+
+In this project, the words we release into the air are gathered and bound into a book, binding us together across distances and borders. Visitors are invited to drift through a globe-shaped sky and leave messages wherever they wish. Each part of the sky is marked not by latitude or longitude, but by page numbers. By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices, forming a book that can be flipped through and read.
+
+Throughout the exhibition, not only those in Shenzhen but people from all corners of the world are welcome to leave their messages. Together, as a global community, we bind the air into a shared book, turning borders into pages that connect us.
+`;
+
+// 뒷표지 내용
+const backCoverText = `
+Published by Halim Lee
+`;
+
+// JSON 파일 불러오기
+async function loadPageJSON(pageNumber) {
+  const res = await fetch(`pages/page_${pageNumber}.json`);
+  if (!res.ok) {
+    console.error(`Failed to load page_${pageNumber}.json`);
+    return {};
+  }
+  return await res.json();
+}
+
+// PDF 생성
+async function savePDFwithCover() {
+  const { jsPDF } = window.jspdf;
+  // const pdf = new jsPDF("p", "pt", "a4"); // 포트레이트, pt 단위, A4
+  const pdf = new jsPDF("p", "pt", "a6");
+  const cols = 10;
+  const cellWidth = 15; 
+  const cellHeight = 15;
+  const startX = 20;  // 좌측 여백
+  const startY = 40;  // 상단 여백
+  // const cellWidth = 25;
+  // const cellHeight = 25;
+  // const startX = 40;
+  // const startY = 60;
+
+  // 1. 표지
+  pdf.setFontSize(14);
+  const coverLines = coverText.split("\n").filter(line => line.trim() !== "");
+  coverLines.forEach((line, index) => {
+    pdf.text(line, startX, startY + index * 18);
+  });
+
+  // 2. JSON 페이지들
+  for (let page = 1; page <= totalBodyPages; page++) {
+    pdf.addPage();
+    const data = await loadPageJSON(page);
+
+    let i = 0;
+    for (let key in data) {
+      const value = data[key] || "";
+      const x = startX + (i % cols) * cellWidth;
+      const y = startY + Math.floor(i / cols) * cellHeight;
+      pdf.text(value, x, y);
+      i++;
+      if (i >= inputsCount) break;
+    }
+
+    // 페이지 번호 추가 (JSON 페이지들만)
+    const pageNumber = page; // 1~64
+    pdf.text(
+      `${pageNumber}`,
+      pdf.internal.pageSize.getWidth() / 2,
+      pdf.internal.pageSize.getHeight() - 20,
+      { align: "center" }
+    );
+  }
+
+  // for (let page = 1; page <= totalBodyPages; page++) {
+  //   pdf.addPage();
+  //   const data = await loadPageJSON(page);
+
+  //   let i = 0;
+  //   for (let key in data) {
+  //     const value = data[key] || "";
+  //     const x = startX + (i % cols) * cellWidth;
+  //     const y = startY + Math.floor(i / cols) * cellHeight;
+  //     pdf.text(value, x, y);
+  //     i++;
+  //     if (i >= inputsCount) break;
+  //   }
+  // }
+
+  // 3. 뒷표지
+  pdf.addPage();
+  const backLines = backCoverText.split("\n").filter(line => line.trim() !== "");
+  backLines.forEach((line, index) => {
+    pdf.text(line, startX, startY + index * 18);
+  });
+
+  // 저장
+  pdf.save("BindTheAir.pdf");
+}
+
+// 버튼 이벤트
+saveBtn.addEventListener("click", async () => {
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Processing...";
+  await savePDFwithCover();
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Save";
+});
+</script>
+
+
+<!-- <script>
+const saveBtn = document.getElementById("saveBtn");
+
+saveBtn.addEventListener("click", async () => {
+  try {
+    // #inputs 영역 캡처
+    const canvas = await html2canvas(inputsContainer, {
+      backgroundColor: null, // 투명 배경 원하면 null
+      scale: 2 // 해상도 조정
+    });
+    
+    // PNG 데이터 생성
+    const imgData = canvas.toDataURL("image/png");
+
+    // 다운로드 링크 생성
+    const link = document.createElement("a");
+    link.href = imgData;
+    link.download = `page_${currentPage}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    alert(`Page ${currentPage} PNG 저장 완료!`);
+  } catch (err) {
+    console.error("PNG 저장 실패", err);
+  }
+});
+</script> -->
+
+</body>
 </html>
-
-

@@ -6,7 +6,13 @@
 <title>Bind the Air</title>
 <!-- <link rel="shortcut icon" href="favicon.png"> -->
 
+<!-- css -->
 <link rel="stylesheet" href="font.css">
+<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="index_detail.css">
+<link rel="stylesheet" href="index_media.css">
+
+
 <style>
   body {
     margin: 0;
@@ -142,7 +148,7 @@
   }
 </style>
 
-
+<!-- script: socket -->
 <script src="/socket.io/socket.io.js"></script>
 <script type="importmap">
 {
@@ -328,9 +334,9 @@
             div.appendChild(input);
             allInputs.push(input);
 
-            const planeId=Math.floor(inputCount/inputsCount);
-            const inputIndex=inputCount%inputsCount;
-            setupInput(input, planeId, inputIndex);
+            const pageId = Math.floor((inputCount-1)/inputsCount) + 1; // 1부터 시작
+            const inputIndex = (inputCount-1) % inputsCount;
+            setupInput(input, pageId, inputIndex);
             inputCount++;
           }
 
@@ -361,7 +367,7 @@
       }
 
       planeCount = Math.ceil(allInputs.length/inputsCount);
-      requestAllPlanes();
+      requestAllPages();
       
       // 윈도우 이벤트
       window.addEventListener('keydown', (e) => {
@@ -377,28 +383,28 @@
 
 
     // --- Input Event Setup ---
-    function setupInput(input, planeId, inputIndex){
+    function setupInput(input, pageId, inputIndex){
       let isComposing=false;
       input.addEventListener('compositionstart',()=>isComposing=true);
       input.addEventListener('compositionend',()=>isComposing=false);
       input.addEventListener('input',()=>{
         if(isComposing) return;
-        socket.emit('inputChange',{planeId,inputIndex,value:input.value});
+        socket.emit('inputChange',{pageId,inputIndex,value:input.value});
         input.value.trim()!=='' ? input.classList.add('input-texted') : input.classList.remove('input-texted');
       });
     }
 
     // --- 요청 ---
-    function requestAllPlanes(){
-      for(let planeId=0; planeId<planeCount; planeId++){
-        socket.emit('requestPlaneData', planeId);
+    function requestAllPages(){
+      for(let pageId=1; pageId<=planeCount; pageId++){
+        socket.emit('requestPlaneData', pageId);
       }
     }
 
     // --- 서버에서 load ---
-    socket.on('loadPlaneData', ({planeId,data})=>{
+    socket.on('loadPlaneData', ({pageId,data})=>{
       for(let i=0;i<inputsCount;i++){
-        const globalIndex=planeId*inputsCount+i;
+        const globalIndex=(pageId-1)*inputsCount + i;
         const input=allInputs[globalIndex];
         if(!input) continue;
         const value=data['input'+i]||'';
@@ -408,8 +414,8 @@
     });
 
     // --- 서버에서 실시간 update ---
-    socket.on('updateInput', ({planeId,inputIndex,value})=>{
-      const globalIndex=planeId*inputsCount+inputIndex;
+    socket.on('updateInput', ({pageId,inputIndex,value})=>{
+      const globalIndex=(pageId-1)*inputsCount + inputIndex;
       const input=allInputs[globalIndex];
       if(!input) return;
       input.value=value||'';

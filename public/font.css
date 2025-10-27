@@ -11,6 +11,10 @@
   src: url('./font/FKGroteskMonoTrial-Regular.woff') format('woff');
 }
 
+html, body {
+  font-family: 'FKGroteskMonoTrial-Regular';
+}
+
 h1 {
   margin-block-start: 0;
   margin-block-end: 0.67em;

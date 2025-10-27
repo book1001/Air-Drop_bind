@@ -199,9 +199,7 @@ const PORT = process.env.PORT || 8080;
 app.use(express.static(path.join(__dirname, "public")));
 
 // Health Check용 기본 라우트
-app.get("/", (req, res) => {
-  res.send("OK");
-});
+app.get("/", (req, res) => res.send("OK"));
 
 // Plane JSON 읽기
 app.get("/pages/:file", (req, res) => {
@@ -212,38 +210,85 @@ app.get("/pages/:file", (req, res) => {
 io.on("connection", (socket) => {
   console.log("A user connected ✅");
 
-  socket.on("requestPlaneData", (planeId) => {
-    const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
+  socket.on("requestPlaneData", (pageId) => {
+    const filePath = path.join(__dirname, "public/pages", `page_${pageId}.json`);
     let data = {};
 
     if (fs.existsSync(filePath)) {
-      try { data = JSON.parse(fs.readFileSync(filePath, "utf8")); }
-      catch(err){ console.error("JSON parse error:", err); }
+      try {
+        data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      } catch (err) {
+        console.error("JSON parse error:", err);
+      }
     } else {
-      for(let i=0;i<inputsCount;i++) data[`input${i}`]='';
-      fs.writeFileSync(filePath, JSON.stringify(data, null,2));
+      // ✅ page_1.json 부터 생성
+      for (let i = 0; i < inputsCount; i++) {
+        data[`input${i}`] = '';
+      }
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     }
 
-    socket.emit("loadPlaneData", { planeId, data });
+    socket.emit("loadPlaneData", { pageId, data });
   });
 
-  socket.on("inputChange", ({ planeId, inputIndex, value }) => {
-    const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
+  socket.on("inputChange", ({ pageId, inputIndex, value }) => {
+    const filePath = path.join(__dirname, "public/pages", `page_${pageId}.json`);
     let data = {};
 
-    if(fs.existsSync(filePath)){
-      try{ data = JSON.parse(fs.readFileSync(filePath,"utf8")); } 
-      catch(err){ console.error("JSON parse error:", err); }
+    if (fs.existsSync(filePath)) {
+      try {
+        data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      } catch (err) {
+        console.error("JSON parse error:", err);
+      }
     }
 
     data[`input${inputIndex}`] = value;
-    fs.writeFileSync(filePath, JSON.stringify(data,null,2));
 
-    io.emit("updateInput", { planeId, inputIndex, value });
+    // ✅ page_1.json 부터 저장
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+    io.emit("updateInput", { pageId, inputIndex, value });
   });
 
-  socket.on("disconnect", ()=> console.log("A user disconnected ❌"));
+  socket.on("disconnect", () => console.log("A user disconnected ❌"));
 });
+
+// io.on("connection", (socket) => {
+//   console.log("A user connected ✅");
+
+//   socket.on("requestPlaneData", (planeId) => {
+//     const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
+//     let data = {};
+
+//     if (fs.existsSync(filePath)) {
+//       try { data = JSON.parse(fs.readFileSync(filePath, "utf8")); }
+//       catch(err){ console.error("JSON parse error:", err); }
+//     } else {
+//       for(let i=0;i<inputsCount;i++) data[`input${i}`]='';
+//       fs.writeFileSync(filePath, JSON.stringify(data, null,2));
+//     }
+
+//     socket.emit("loadPlaneData", { planeId, data });
+//   });
+
+//   socket.on("inputChange", ({ planeId, inputIndex, value }) => {
+//     const filePath = path.join(__dirname, "public/pages", `plane_${planeId}.json`);
+//     let data = {};
+
+//     if(fs.existsSync(filePath)){
+//       try{ data = JSON.parse(fs.readFileSync(filePath,"utf8")); } 
+//       catch(err){ console.error("JSON parse error:", err); }
+//     }
+
+//     data[`input${inputIndex}`] = value;
+//     fs.writeFileSync(filePath, JSON.stringify(data,null,2));
+
+//     io.emit("updateInput", { planeId, inputIndex, value });
+//   });
+
+//   socket.on("disconnect", ()=> console.log("A user disconnected ❌"));
+// });
 
 // 🔑 중요한 수정: 0.0.0.0으로 바인딩
 http.listen(PORT, "0.0.0.0", () => {
