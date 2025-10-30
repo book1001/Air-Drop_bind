@@ -11,8 +11,44 @@
   src: url('./font/FKGroteskMonoTrial-Regular.woff') format('woff');
 }
 
+
+:lang(ko) {
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+:lang(zh) {
+  font-family: "Noto Sans SC", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+
+
+/* text: drag color ================================================ */
+::selection {
+  color: white;
+  text-shadow: 0 0px 6px yellow;
+  text-decoration: none;
+  /* color: #000000 !important;
+  background: #ffffff !important; */
+}
+
+/* Code for Firefox */
+::-moz-selection { 
+  color: white;
+  text-shadow: 0 0px 6px yellow;
+  text-decoration: none;
+  /* color: #000000 !important;
+  background: #ffffff !important; */
+}
+
+
 html, body {
-  font-family: 'FKGroteskMonoTrial-Regular';
+  font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
 }
 
 .material-symbols-outlined {
