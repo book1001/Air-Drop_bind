@@ -11,6 +11,28 @@
   src: url('./font/FKGroteskMonoTrial-Regular.woff') format('woff');
 }
 
+@font-face {
+  font-family: 'FKGroteskSemiMonoTrial-Regular';
+  src: url('./font/FKGroteskSemiMonoTrial-Regular.woff2') format('woff2');
+  src: url('./font/FKGroteskSemiMonoTrial-Regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'FKGroteskNeueTrial-Bold';
+  src: url('./font/FKGroteskNeueTrial-Bold.woff2') format('woff2');
+  src: url('./font/FKGroteskNeueTrial-Bold.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Menlo-Regular';
+  src: url('./font/Menlo-Regular_RadioClub.woff2') format('woff2');
+  src: url('./font/Menlo-Regular_RadioClub.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'AppleChancery';
+  src: url('./font/AppleChancery.woff') format('woff');
+}
 
 :lang(ko) {
   font-family: "Noto Sans KR", sans-serif;
