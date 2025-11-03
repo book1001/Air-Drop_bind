@@ -13,14 +13,24 @@
 
 <link rel="stylesheet" href="font.css">
 <link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="bg.css">
 <link rel="stylesheet" href="index_detail.css">
 <link rel="stylesheet" href="index_media.css">
 
 
 <style>
+  html,body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
   body {
     margin: 0;
-    background: blue;
+    background: black;
     /* background-image: url("img/sky_1.jpg"); */
     overflow: hidden;
     cursor: grab;
@@ -32,7 +42,7 @@
     left: 0;
     z-index: 0;
     pointer-events: none;
-    background: linear-gradient(0deg,rgba(0, 251, 255, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 249, 255, 1) 18%, rgba(0, 220, 255, 1) 65%);
+    /* background: linear-gradient(0deg,rgba(0, 251, 255, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 249, 255, 1) 18%, rgba(0, 220, 255, 1) 65%); */
   }
 
   #cssRenderer {
@@ -106,6 +116,13 @@
     filter: none;
     transform: translate3d(0, 0, 0) scale(1.0001);
     backface-visibility: hidden;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
   /* 포커스 시에도 blur 안 생김 */
@@ -115,6 +132,12 @@
     outline: none;
     filter: none;
     transform: translate3d(0, 0, 0) scale(1.0001);
+  }
+
+  .input-selected {
+    border: 1px solid yellow !important;
+    color: transparent !important;
+    /* background: yellow !important; */
   }
 
   .input-texted {
@@ -175,7 +198,7 @@
     z-index: -1;
   }
 
-  .info {
+  #info {
     position: fixed; 
     top: 3px;
     left: 9px;
@@ -198,13 +221,14 @@
     text-transform: uppercase; */
     font-family: 'FKGroteskNeueTrial-Bold';
     font-size: 19px;
-    color: black;
-    text-shadow: 0 0 6px #ffffff;
+    /* color: black;
+    text-shadow: 0 0 6px #ffffff; */
   }
 </style>
 
 <!-- script: socket -->
 <script src="/socket.io/socket.io.js"></script>
+
 <script type="importmap">
 {
   "imports": {
@@ -220,9 +244,14 @@
      command + > Move Right<br>
      command + < Move Left<br>
   </div> -->
-  <div class="info">
+  
+  <div id="bg"></div>
+  <div id="info">
     By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices.
   </div>
+
+  <script type="text/javascript" src="bg.js"></script>
+
 
   <script type="module">
     import * as THREE from 'three';
@@ -236,6 +265,11 @@
     const inputsCount = 180;
     let allInputs = [];
     let planeCount = 0; // 실제 plane 수
+
+    // camera 회전 제어용
+    let targetQuaternion = new THREE.Quaternion();
+    let isCameraMoving = false;
+    let keyRotation = new THREE.Quaternion();
 
     let loadedFont=null;
     // new FontLoader().load('font/FK Grotesk SemiMono Trial_Regular.json', f => { loadedFont=f; init(); animate(); });
@@ -272,13 +306,13 @@
     let cloudSouth;
 
     // background gradients (생략 생략 - 동일)
-    const gradients = {
-      dawn: ['#1a237e','#3949ab','#81d4fa'],
-      morning:['#81d4fa','#fff176','#ffb74d'],
-      noon:['#00afff','#4ADBFF','#ffffff'],
-      evening:['#00afff','#4ADBFF','#ffffff'],
-      night:['#00afff','#4ADBFF','#ffffff']
-    };
+    // const gradients = {
+    //   dawn: ['#1a237e','#3949ab','#81d4fa'],
+    //   morning:['#81d4fa','#fff176','#ffb74d'],
+    //   noon:['#00afff','#4ADBFF','#ffffff'],
+    //   evening:['#00afff','#4ADBFF','#ffffff'],
+    //   night:['#00afff','#4ADBFF','#ffffff']
+    // };
     // const gradients = {
     //   dawn: ['#1a237e','#3949ab','#81d4fa'],
     //   morning:['#81d4fa','#fff176','#ffb74d'],
@@ -286,8 +320,8 @@
     //   evening:['#ff8a65','#f06292','#ba68c8'],
     //   night:['#00afff','#4ADBFF','#ffffff']
     // };
-    let currentPalette = gradients[getTimeOfDay()];
-    let targetPalette = currentPalette.slice();
+    // let currentPalette = gradients[getTimeOfDay()];
+    // let targetPalette = currentPalette.slice();
     let lastUpdate = 0;
 
     function getTimeOfDay(){ const hour = new Date().getHours(); if(hour>=4 && hour<8) return 'dawn'; if(hour>=8 && hour<12) return 'morning'; if(hour>=12 && hour<17) return 'noon'; if(hour>=17 && hour<21) return 'evening'; return 'night'; }
@@ -337,6 +371,21 @@
     //   texture.needsUpdate = true;
     // }
 
+    let autoRotateSpeed = 0.05; // 자동 회전 속도
+    let manualRotation = new THREE.Vector2(0,0); // Ctrl/Cmd 회전 저장
+
+    // --- 자동 회전 함수 ---
+    function focusCameraOnInput(input) {
+      if (!input || !input.value.trim()) return; // 값 없으면 자동 회전 안 함
+
+      const object = input.__threeObj;
+      if (!object) return;
+
+      const targetDir = object.position.clone().normalize();
+      const m = new THREE.Matrix4().lookAt(new THREE.Vector3(0,0,0), targetDir, new THREE.Vector3(0,1,0));
+      targetQuaternion.setFromRotationMatrix(m);
+      isCameraMoving = true;
+    }
 
     
     // --- Init ---
@@ -469,6 +518,7 @@
       const latLines=6, lonLines=16;
       const lineThickness = 1;
       const verticalLines=[], horizontalLines=[];
+      const inputsPerPlane = inputsCount;
 
       function createTubeFromPoints(points, radius=1, radialSegments=6){
         class CustomCurve extends THREE.Curve { constructor(points){ super(); this.points=points; } getPoint(t){ const idx=t*(this.points.length-1); const i=Math.floor(idx); const frac=idx-i; if(i>=this.points.length-1) return this.points[this.points.length-1]; return new THREE.Vector3().lerpVectors(this.points[i], this.points[i+1], frac); } }
@@ -531,6 +581,9 @@
           div.style.width=planeW+'px';
           div.style.height=planeH+'px';
 
+
+
+
           for(let k=0;k<inputsCount;k++){
             const input=document.createElement('input');
             input.type='text'; 
@@ -543,12 +596,20 @@
             const inputIndex = (inputCount-1) % inputsCount;
             setupInput(input, pageId, inputIndex);
             inputCount++;
+            // input → camera 연결
+            input.__threeObj = null; // 나중에 object 연결
+            input.addEventListener('input', () => { if(input.value.trim()!=='') focusCameraOnInput(input); });
+        
           }
-
-          const object=new CSS3DObject(div);
+          // ✅ object 선언
+          const object = new CSS3DObject(div);
           object.position.copy(center);
-          object.lookAt(0,0,0);
+          object.lookAt(0, 0, 0);
           sphereGroup.add(object);
+
+          // input ↔ object 연결
+          div.querySelectorAll('input').forEach(inp => inp.__threeObj = object);
+
 
           if(font1){
             const textGeo = new TextGeometry(faceCount.toString(), {
@@ -579,125 +640,300 @@
 
       planeCount = Math.ceil(allInputs.length/inputsCount);
       requestAllPages();
+
+
+      // --- 카메라 회전 관리 ---
+      isCameraMoving = false;
+      targetQuaternion = new THREE.Quaternion();
+      keyRotation.identity();
+
+      function rotateCamera(deltaX, deltaY) {
+        const qx = new THREE.Quaternion();
+        const qy = new THREE.Quaternion();
+        qx.setFromAxisAngle(new THREE.Vector3(1,0,0), deltaY);
+        qy.setFromAxisAngle(new THREE.Vector3(0,1,0), deltaX);
+
+        keyRotation.multiplyQuaternions(qy, keyRotation);
+        keyRotation.multiplyQuaternions(qx, keyRotation);
+
+        clampEuler(keyRotation);
+      }
+
+      function clampEuler(quat){
+        const euler = new THREE.Euler().setFromQuaternion(quat,'YXZ');
+        const maxX = Math.PI/2 - 0.01;
+        const minX = -Math.PI/2 + 0.01;
+        euler.x = Math.max(minX, Math.min(maxX, euler.x));
+        quat.setFromEuler(euler);
+      }
       
       // 윈도우 이벤트
-      window.addEventListener('keydown', (e) => {
-        if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        const currentInput = document.activeElement;
-        const currentIndex = allInputs.indexOf(currentInput);
-        if(e.key === 'ArrowRight'){ rotationY += speed; if(currentIndex >= 0 && currentIndex < allInputs.length - 1){ e.preventDefault(); allInputs[currentIndex + 1].focus(); } }
-        else if(e.key === 'ArrowLeft'){ rotationY -= speed; if(currentIndex > 0){ e.preventDefault(); allInputs[currentIndex - 1].focus(); } }
+      // window.addEventListener('keydown', (e) => {
+      //   if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
+      //   const currentInput = document.activeElement;
+      //   const currentIndex = allInputs.indexOf(currentInput);
+      //   if(e.key === 'ArrowRight'){ rotationY += speed; if(currentIndex >= 0 && currentIndex < allInputs.length - 1){ e.preventDefault(); allInputs[currentIndex + 1].focus(); } }
+      //   else if(e.key === 'ArrowLeft'){ rotationY -= speed; if(currentIndex > 0){ e.preventDefault(); allInputs[currentIndex - 1].focus(); } }
+      // });
+      // window.addEventListener('keyup', (e)=>{ if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+      // window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); webGLRenderer.setSize(window.innerWidth, window.innerHeight); cssRenderer.setSize(window.innerWidth, window.innerHeight); });
+
+      // 윈도우 이벤트
+      // window.addEventListener('keydown', (e) => {
+      //   const currentInput = document.activeElement;
+      //   const currentIndex = allInputs.indexOf(currentInput);
+      //   const isCtrlOrCmd = e.ctrlKey || e.metaKey; // Ctrl (Win) or Cmd (Mac)
+      //   const speed = 0.1; // 기존 speed 값 사용
+
+      //   switch (e.keyCode) {
+      //     case 39: // →
+      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
+      //         e.preventDefault();
+      //         manualRotation.y -= speed; // Y축 로컬
+      //       } else if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
+      //         e.preventDefault();
+      //         allInputs[currentIndex + 1].focus();
+      //       }
+      //       break;
+
+      //     case 37: // ←
+      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
+      //         e.preventDefault();
+      //         manualRotation.y += speed;
+      //       } else if (currentIndex > 0) {
+      //         e.preventDefault();
+      //         allInputs[currentIndex - 1].focus();
+      //       }
+      //       break;
+
+      //     case 38: // ↑
+      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
+      //         e.preventDefault();
+      //         manualRotation.x += speed;
+      //       }
+      //       break;
+
+      //     case 40: // ↓
+      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
+      //         e.preventDefault();
+      //         manualRotation.x -= speed;
+      //       }
+      //       break;
+      //     // case 39: // →
+      //     //   if (isCtrlOrCmd) {
+      //     //     e.preventDefault();
+      //     //     rotationY += speed;
+      //     //   } else if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
+      //     //     e.preventDefault();
+      //     //     allInputs[currentIndex + 1].focus();
+      //     //   }
+      //     //   break;
+
+      //     // case 37: // ←
+      //     //   if (isCtrlOrCmd) {
+      //     //     e.preventDefault();
+      //     //     rotationY -= speed;
+      //     //   } else if (currentIndex > 0) {
+      //     //     e.preventDefault();
+      //     //     allInputs[currentIndex - 1].focus();
+      //     //   }
+      //     //   break;
+
+      //     // case 38: // ↑
+      //     //   if (isCtrlOrCmd) {
+      //     //     e.preventDefault();
+      //     //     rotationX -= speed;
+      //     //   }
+      //     //   break;
+
+      //     // case 40: // ↓
+      //     //   if (isCtrlOrCmd) {
+      //     //     e.preventDefault();
+      //     //     rotationX += speed;
+      //     //   }
+      //     //   break;
+      //   }
+      // });
+
+      window.addEventListener('keyup', (e) => {
+        if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
       });
-      window.addEventListener('keyup', (e)=>{ if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
-      window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); webGLRenderer.setSize(window.innerWidth, window.innerHeight); cssRenderer.setSize(window.innerWidth, window.innerHeight); });
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        cssRenderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+
+    
     } // init()
 
 
     // --- Input Event Setup ---
 
-    function setupInput(input, pageId, inputIndex) {
-      let isComposing = false;
-      let composedText = "";
+    // function setupInput(input, pageId, inputIndex) {
+    //   let isComposing = false;
+    //   let composedText = "";
 
-      // 입력 옵션
-      input.inputMode = 'text';
-      input.autocapitalize = 'off';
-      input.autocorrect = 'off';
-      input.spellcheck = false;
-      input.style.imeMode = 'active'; // IME 사용 가능
+    //   // 입력 옵션
+    //   input.inputMode = 'text';
+    //   input.autocapitalize = 'off';
+    //   input.autocorrect = 'off';
+    //   input.spellcheck = false;
+    //   input.style.imeMode = 'active'; // IME 사용 가능
 
-      input.addEventListener("compositionstart", () => {
-        isComposing = true;
-        composedText = "";
-        input.value = ""; // 조합 시작 시 입력 숨김
-      });
+    //   input.addEventListener("compositionstart", () => {
+    //     isComposing = true;
+    //     composedText = "";
+    //     input.value = ""; // 조합 시작 시 입력 숨김
+    //   });
 
-      input.addEventListener("compositionupdate", (e) => {
-        isComposing = true;
-        composedText = e.data; // 현재 조합 중인 문자열 저장
-        input.value = ""; // 영어/한자 조합 문자 표시 금지
-      });
+    //   input.addEventListener("compositionupdate", (e) => {
+    //     isComposing = true;
+    //     composedText = e.data; // 현재 조합 중인 문자열 저장
+    //     input.value = ""; // 영어/한자 조합 문자 표시 금지
+    //   });
 
-      input.addEventListener("compositionend", (e) => {
-        isComposing = false;
-        composedText = e.data || composedText;
-        // input.value = ""; // 화면에 표시하지 않음
+    //   input.addEventListener("compositionend", (e) => {
+    //     isComposing = false;
+    //     composedText = e.data || composedText;
+    //     // input.value = ""; // 화면에 표시하지 않음
 
-        if (composedText.length > 0) {
-          distributeCharacters(composedText);
-          composedText = "";
-        }
-      });
+    //     if (composedText.length > 0) {
+    //       distributeCharacters(composedText);
+    //       composedText = "";
+    //     }
+    //   });
 
-      input.addEventListener("input", () => {
-        if (isComposing) return; // 조합 중이면 무시
+    //   input.addEventListener("input", () => {
+    //     if (isComposing) return; // 조합 중이면 무시
 
-        const val = input.value;
-        if (val.trim() === "") return;
+    //     const val = input.value;
+    //     if (val.trim() === "") return;
 
-        distributeCharacters(val);
-      });
-
-      input.addEventListener("keydown", (e) => {
-        const currentIndex = allInputs.indexOf(input);
-
-        // 백스페이스 처리 (keyCode 8)
-        if (e.keyCode === 8 && input.value === "") {
-          e.preventDefault();
-          if (currentIndex > 0) {
-            const prevInput = allInputs[currentIndex - 1];
-            prevInput.value = ""; // 이전 input 삭제
-            prevInput.classList.remove("input-texted");
-
-            socket.emit("inputChange", {
-              pageId,
-              inputIndex: currentIndex - 1,
-              value: ""
-            });
-
-            prevInput.focus();
-          }
-        }
-
-        // 스페이스 처리 → 다음 input으로 이동 (keyCode 32)
-        if (e.keyCode === 32) {
-          e.preventDefault();
-          if (currentIndex < allInputs.length - 1) {
-            allInputs[currentIndex + 1].focus();
-          }
-        }
-      });
-
-      function distributeCharacters(text) {
-        const chars = [...text]; // 한자, 한글, 이모지 모두 처리
-        let currentIndex = allInputs.indexOf(input);
-
-        chars.forEach((ch) => {
-          if (currentIndex >= allInputs.length) return;
-
-          const target = allInputs[currentIndex];
-          target.value = ch;
-          target.classList.add("input-texted");
-
-          socket.emit("inputChange", {
-            pageId,
-            inputIndex: currentIndex,
-            value: ch
-          });
-
-          currentIndex++;
-        });
-
-        // 마지막 입력 후 포커스 이동
-        if (currentIndex < allInputs.length) {
-          allInputs[currentIndex].focus();
-        } else {
-          allInputs[allInputs.length - 1].focus();
-        }
-      }
-    }
+    //     distributeCharacters(val);
+    //   });
 
 
+    //   input.addEventListener("keydown", (e) => {
+    //     const currentIndex = allInputs.indexOf(input);
+
+    //     // 현재 input의 숫자 추출
+    //     const currentIdNum = parseInt(input.id.replace("input", ""), 10);
+
+    //     // 백스페이스 처리 (keyCode 8)
+    //     if (e.keyCode === 8 && input.value === "") {
+    //       e.preventDefault();
+    //       if (currentIndex > 0) {
+    //         const prevInput = allInputs[currentIndex - 1];
+    //         prevInput.value = ""; // 이전 input 삭제
+    //         prevInput.classList.remove("input-texted");
+
+    //         socket.emit("inputChange", {
+    //           pageId,
+    //           inputIndex: currentIndex - 1,
+    //           value: ""
+    //         });
+
+    //         prevInput.focus();
+    //       }
+    //       return;
+    //     }
+
+    //     // 스페이스 처리 → 다음 input으로 이동 (keyCode 32)
+    //     if (e.keyCode === 32) {
+    //       e.preventDefault();
+    //       if (currentIndex < allInputs.length - 1) {
+    //         allInputs[currentIndex + 1].focus();
+    //       }
+    //       return;
+    //     }
+
+    //     // 화살표 위/아래로 input 이동 (15칸씩)
+    //     if (e.keyCode === 38 || e.keyCode === 40) { // ↑ or ↓
+    //       e.preventDefault();
+    //       let targetIdNum = null;
+
+    //       // 범위 매핑 배열
+    //       const inputMappings = [
+    //         { fromStart: 166, fromEnd: 180, toStart: 2881 }, //1
+    //         { fromStart: 346, fromEnd: 540, toStart: 3061 }, //2
+    //         { fromStart: 526, fromEnd: 720, toStart: 3241 }, //3
+    //         // { fromStart: 706, fromEnd: 900, toStart: 3421 }, //4
+    //         // { fromStart: 886, fromEnd: 1080, toStart: 3601 }, //5
+    //         // { fromStart: 1066, fromEnd: 1260, toStart: 3781 }, //6
+    //         // { fromStart: 1246, fromEnd: 1440, toStart: 3961 }, //7
+    //         // { fromStart: 1426, fromEnd: 1620, toStart: 4141 }, //8
+    //         // { fromStart: 1606, fromEnd: 1800, toStart: 4321 }, //9
+    //         // { fromStart: 1786, fromEnd: 1980, toStart: 4501 }, //10
+    //         // { fromStart: 1966, fromEnd: 2160, toStart: 4681 }, //11
+    //         // { fromStart: 2146, fromEnd: 2340, toStart: 4861 }, //12
+    //         // { fromStart: 2326, fromEnd: 2520, toStart: 5041 }, //13
+    //         // { fromStart: 2506, fromEnd: 2700, toStart: 5221 }, //14
+    //         // { fromStart: 2686, fromEnd: 2880, toStart: 5401 }, //15
+    //         // { fromStart: 2866, fromEnd: 3060, toStart: 5581 }, //16
+    //         // 추가 범위 필요 시 여기에 작성
+    //       ];
+
+    //       // 범위 매핑 확인
+    //       const map = inputMappings.find(m => currentIdNum >= m.fromStart && currentIdNum <= m.fromEnd);
+    //       if (map) {
+    //         const offset = currentIdNum - map.fromStart;
+    //         targetIdNum = e.keyCode === 38 ? map.toStart + offset - 15 : map.toStart + offset;
+    //       } else {
+    //         // 범위 외 input → 15씩 이동
+    //         targetIdNum = e.keyCode === 38 ? currentIdNum - 15 : currentIdNum + 15;
+    //       }
+
+    //       const targetInput = document.getElementById("input" + targetIdNum);
+    //       if (targetInput) targetInput.focus();
+    //     }
+  
+    //     // if (e.keyCode === 38) { // ↑
+    //     //   e.preventDefault();
+    //     //   const targetIndex = Math.max(0, currentIndex - 15);
+    //     //   allInputs[targetIndex].focus();
+    //     // }
+    //     // if (e.keyCode === 40) { // ↓
+    //     //   e.preventDefault();
+    //     //   const targetIndex = Math.min(allInputs.length - 1, currentIndex + 15);
+    //     //   allInputs[targetIndex].focus();
+    //     // }
+  
+    //   });
+
+    //   function distributeCharacters(text) {
+    //     const chars = [...text]; // 한자, 한글, 이모지 모두 처리
+    //     let currentIndex = allInputs.indexOf(input);
+
+    //     chars.forEach((ch) => {
+    //       if (currentIndex >= allInputs.length) return;
+
+    //       const target = allInputs[currentIndex];
+    //       target.value = ch;
+    //       target.classList.add("input-texted");
+
+    //       socket.emit("inputChange", {
+    //         pageId,
+    //         inputIndex: currentIndex,
+    //         value: ch
+    //       });
+
+    //       currentIndex++;
+    //     });
+
+    //     // 마지막 입력 후 포커스 이동
+    //     if (currentIndex < allInputs.length) {
+    //       allInputs[currentIndex].focus();
+    //     } else {
+    //       allInputs[allInputs.length - 1].focus();
+    //     }
+    //   }
+    // }
+
+    //====================================================
 
     // function setupInput(input, pageId, inputIndex) {
     //   let isComposing = false;
@@ -909,54 +1145,111 @@
 
 
 
-    // function setupInput(input, pageId, inputIndex){
-    //   let isComposing = false;
+    function setupInput(input, pageId, inputIndex){
+      let isComposing = false;
 
-    //   input.addEventListener('compositionstart', () => isComposing = true);
-    //   input.addEventListener('compositionend', () => isComposing = false);
+      input.addEventListener('compositionstart', () => isComposing = true);
+      input.addEventListener('compositionend', () => isComposing = false);
 
-    //   input.addEventListener('input', (e) => {
-    //     if(isComposing) return;
+      // ✅ input에 포커스 될 때 항상 전체 선택 및 클래스 적용
+      const selectInput = () => {
+        allInputs.forEach(i => i.classList.remove('input-selected'));
+        input.classList.add('input-selected');
+        input.select(); // 전체 텍스트 선택
+      };
 
-    //     // ✅ 현재 상태 업데이트 서버로 전송
-    //     socket.emit('inputChange', { pageId, inputIndex, value: input.value });
+      input.addEventListener('focus', selectInput);
+      input.addEventListener('click', selectInput);
+      input.addEventListener('keydown', selectInput);
 
-    //     // ✅ 스타일 토글
-    //     input.value.trim() !== '' 
-    //       ? input.classList.add('input-texted')
-    //       : input.classList.remove('input-texted');
+      input.addEventListener('input', (e) => {
+        if(isComposing) return;
 
-    //     const currentIndex = allInputs.indexOf(input);
+        // ✅ 현재 상태 업데이트 서버로 전송
+        socket.emit('inputChange', { pageId, inputIndex, value: input.value });
 
-    //     // ✅ 한 글자 입력 후 자동 이동
-    //     if(input.value.length === 1 && currentIndex < allInputs.length - 1){
-    //       allInputs[currentIndex + 1].focus();
-    //     }
-    //   });
+        // ✅ 스타일 토글
+        input.value.trim() !== '' 
+          ? input.classList.add('input-texted')
+          : input.classList.remove('input-texted');
 
-    //   input.addEventListener('keydown', (e) => {
-    //     const currentIndex = allInputs.indexOf(input);
+        const currentIndex = allInputs.indexOf(input);
 
-    //     // ✅ 백스페이스 시 이전 input으로 이동
-    //     if(e.key === 'Backspace' && input.value === '' && currentIndex > 0){
-    //       e.preventDefault();
-    //       const prev = allInputs[currentIndex - 1];
-    //       prev.focus();
-    //       prev.value = ''; // 원하면 삭제 유지
-    //       socket.emit('inputChange', { pageId, inputIndex: currentIndex - 1, value: '' });
-    //     }
+        // ✅ 한 글자 입력 후 자동 이동
+        if(input.value.length === 1 && currentIndex < allInputs.length - 1){
+          allInputs[currentIndex + 1].focus();
+        }
+      });
 
-    //     // ✅ 좌우 화살표 이동 지원 (기존 적용 유지)
-    //     if(e.key === 'ArrowLeft' && currentIndex > 0){
-    //       e.preventDefault();
-    //       allInputs[currentIndex - 1].focus();
-    //     }
-    //     if(e.key === 'ArrowRight' && currentIndex < allInputs.length - 1){
-    //       e.preventDefault();
-    //       allInputs[currentIndex + 1].focus();
-    //     }
-    //   });
-    // }
+      input.addEventListener('keydown', (e) => {
+        const currentIndex = allInputs.indexOf(input);
+
+        // ✅ 백스페이스 시 이전 input으로 이동
+        if(e.key === 'Backspace' && input.value === '' && currentIndex > 0){
+          e.preventDefault();
+          const prev = allInputs[currentIndex - 1];
+          prev.focus();
+          prev.value = ''; // 원하면 삭제 유지
+          socket.emit('inputChange', { pageId, inputIndex: currentIndex - 1, value: '' });
+        }
+
+        // ✅ 좌우 화살표 이동 지원 (기존 적용 유지)
+        if(e.key === 'ArrowLeft' && currentIndex > 0){
+          e.preventDefault();
+          allInputs[currentIndex - 1].focus();
+        }
+        if(e.key === 'ArrowRight' && currentIndex < allInputs.length - 1){
+          e.preventDefault();
+          allInputs[currentIndex + 1].focus();
+        }
+
+         // 현재 input ID 숫자
+        const currentIdNum = parseInt(input.id.replace('input',''), 10);
+        let targetIdNum = null;
+
+        // 🔹 ArrowUp → 위로 이동
+        if(e.key === 'ArrowUp'){
+          e.preventDefault();
+          targetIdNum = currentIdNum - 15; // 위로는 항상 15씩 이동
+          const targetInput = document.getElementById('input' + targetIdNum);
+          if(targetInput) targetInput.focus();
+        }
+
+        // 🔹 ArrowDown 또는 Enter → 아래로 이동
+        if(e.key === 'ArrowDown' || e.key === 'Enter'){
+          e.preventDefault();
+          targetIdNum = currentIdNum + 15; // 아래는 15씩 이동
+          const targetInput = document.getElementById('input' + targetIdNum);
+          if(targetInput) targetInput.focus();
+        }
+
+        // // 🔹 위/아래 화살표 → 15씩 이동
+        // if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+        //   e.preventDefault();
+
+        //   // 현재 input ID 숫자 추출
+        //   const currentIdNum = parseInt(input.id.replace('input',''), 10);
+        //   let targetIdNum = e.key === 'ArrowUp' 
+        //     ? currentIdNum - 15 
+        //     : currentIdNum + 15;
+
+        //   const targetInput = document.getElementById('input' + targetIdNum);
+        //   if(targetInput) targetInput.focus();
+        // }
+
+        // // 🔹 Enter → +15 이동
+        // if(e.key === 'Enter'){
+        //   e.preventDefault();
+        //   const currentIdNum = parseInt(input.id.replace('input',''), 10);
+        //   const targetIdNum = currentIdNum + 15;
+
+        //   const targetInput = document.getElementById('input' + targetIdNum);
+        //   if(targetInput) targetInput.focus();
+        // }
+
+      });
+      
+    }
 
     // function setupInput(input, pageId, inputIndex){
     //   let isComposing=false;
@@ -1014,6 +1307,21 @@
       sphereGroup.rotation.y = rotationY;
       if(cloudSouth) cloudSouth.rotation.y -= 0.001;
 
+       // 부드럽게 카메라 회전
+      if (isCameraMoving) {
+        // 자동 회전: slerp로 부드럽게
+        camera.quaternion.slerp(targetQuaternion, autoRotateSpeed);
+        // 목표에 거의 도달하면 자동 회전 종료
+        if (camera.quaternion.angleTo(targetQuaternion) < 0.001) {
+          isCameraMoving = false;
+        }
+      } else {
+        // 수동 회전 적용
+        camera.rotateX(manualRotation.x);
+        camera.rotateY(manualRotation.y);
+        manualRotation.set(0, 0); // 적용 후 초기화
+      }
+
       // 글자별 y축 회전
       const now = performance.now();
       textMeshes.forEach(mesh => {
@@ -1054,14 +1362,10 @@
 
 
 
-
-      updateGradient(time);
       webGLRenderer.render(scene, camera);
       cssRenderer.render(scene, camera);
     }
     </script>
-
-
 
 </body>
 </html>

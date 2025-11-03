@@ -52,7 +52,7 @@
 
 /* text: drag color ================================================ */
 ::selection {
-  color: white;
+  color: yellow;
   text-shadow: 0 0px 6px yellow;
   text-decoration: none;
   /* color: #000000 !important;
@@ -61,7 +61,7 @@
 
 /* Code for Firefox */
 ::-moz-selection { 
-  color: white;
+  color: yellow;
   text-shadow: 0 0px 6px yellow;
   text-decoration: none;
   /* color: #000000 !important;
