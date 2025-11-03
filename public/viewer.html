@@ -731,6 +731,14 @@ loadPlane(0);
     width: 0;
   }
 
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
   #cover {
     display: none;
     position: absolute;
@@ -760,9 +768,10 @@ loadPlane(0);
     height: 400px;
     overflow-y: auto;
     overflow-x: hidden;
+    background: linear-gradient(0deg,rgba(255, 145, 255, 0.3) 0%, rgba(255, 255, 255, 0.4) 65%);
 
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
   input[type="text"] { 
@@ -772,7 +781,7 @@ loadPlane(0);
     height: 28px;
     box-sizing: border-box; 
     text-transform: uppercase;
-    color: white;
+    color: black;
     font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
     background: transparent;
     /* border: 1px solid black; */
@@ -780,7 +789,7 @@ loadPlane(0);
     outline: none;
     font-size: 16px;
     text-align: center;
-    -webkit-text-fill-color: white;
+    -webkit-text-fill-color: black;
 
 
     border-radius: 0; 
@@ -819,6 +828,7 @@ loadPlane(0);
     background: none;
     padding: 10px;
     text-shadow: rgb(255, 255, 255) 0px 0px 6px;
+    font-size: 15px;
   }
 
   #pageIndicator { 
@@ -844,6 +854,19 @@ loadPlane(0);
   #pageSlider {
     flex: 1;
   }
+
+  .letter {
+    position: absolute;
+    font-family: 'ReadyActive-light';
+    font-size: 200px;
+    color: white;
+    opacity: 0;
+    transform-style: preserve-3d;
+    transition: opacity 0.5s linear;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: -1;
+  }
 </style>
 </head>
 <body>
@@ -853,24 +876,13 @@ loadPlane(0);
 
 <script type="text/javascript" src="bg.js"></script>
 
-
-<div style="position: fixed; top: 200px; left: 20px; font-size: 200px; color: white; font-family: 'ReadyActive-light';">
-  B
-</div>
 <div id="book">
 
   <div class="page" id="currentPage">
     <div id="inputs">
       <div id="cover">
-        <h1>
-          Bind the Air
-        </h1>
-        <p>
-          Bind the Air is a continuation of Air–Drop, which was exhibited last May at the Open M Art Fair in Hangzhou. This volume was inspired by the abC team’s reflection: “If we could read the messages that each of us dropped into the air, Air–Drop could become a book we all create together.”
-
-          In this project, the words we release into the air are gathered and bound into a book, binding us together across distances and borders. Visitors are invited to drift through a globe-shaped sky and leave messages wherever they wish. Each part of the sky is marked not by latitude or longitude, but by page numbers. By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices, forming a book that can be flipped through and read.
-          
-          Throughout the exhibition, not only those in Shenzhen but people from all corners of the world are welcome to leave their messages. Together, as a global community, we bind the air into a shared book, turning borders into pages that connect us.
+        <p style="font-family: 'FKGroteskNeueTrial-Bold'; margin-block-start: 0; margin-block-end: 0;">
+          Travel across the globe and leave your message in the air. The pages covering the sky will be bound into a collective volume on your mobile. Together, as a global community, we bind the air into a shared book — turning borders into pages that connect us. 
         </p>
       </div>
       <span id="pageIndicator">Page 1 / 64</span>
@@ -1031,6 +1043,92 @@ saveBtn.addEventListener("click", async () => {
   }
 });
 </script> -->
+
+
+<script>
+const letters = ['B','I','N','D','T','H','E','A','I','R'];
+const letterElems = [];
+const maxVisible = 3;
+
+// 글자 요소 생성
+letters.forEach(l => {
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = l;
+    document.body.appendChild(span);
+    
+    letterElems.push({
+        el: span,
+        rotationY: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 2, // y축 회전 속도
+        opacity: 0,
+        state: 'idle', // idle, fadeIn, visible, fadeOut
+        waitTime: 0
+    });
+});
+
+// 랜덤 글자 활성화 함수
+function activateRandomLetter() {
+    const inactive = letterElems.filter(obj => obj.state === 'idle');
+    if (inactive.length === 0) return;
+
+    const visibleCount = letterElems.filter(obj => obj.state !== 'idle').length;
+    if (visibleCount >= maxVisible) return;
+
+    const obj = inactive[Math.floor(Math.random() * inactive.length)];
+    obj.state = 'fadeIn';
+    obj.opacity = 0;
+    obj.waitTime = Math.random() * 60 + 30; // visible 유지 시간
+    obj.el.style.left = `${Math.random() * window.innerWidth}px`;
+    obj.el.style.top = `${Math.random() * window.innerHeight}px`;
+}
+
+// 애니메이션 루프
+function animate() {
+    requestAnimationFrame(animate);
+
+    // 랜덤 글자 활성화
+    activateRandomLetter();
+
+    letterElems.forEach(obj => {
+        const el = obj.el;
+
+        // y축 회전
+        obj.rotationY += obj.rotationSpeed;
+        el.style.transform = `rotateY(${obj.rotationY}deg)`;
+
+        // 상태별 opacity 처리
+        if (obj.state === 'fadeIn') {
+            obj.opacity += 0.02;
+            if (obj.opacity >= 1) {
+                obj.opacity = 1;
+                obj.state = 'visible';
+            }
+        } else if (obj.state === 'visible') {
+            obj.waitTime--;
+            if (obj.waitTime <= 0) obj.state = 'fadeOut';
+        } else if (obj.state === 'fadeOut') {
+            obj.opacity -= 0.02;
+            if (obj.opacity <= 0) {
+                obj.opacity = 0;
+                obj.state = 'idle';
+            }
+        }
+
+        el.style.opacity = obj.opacity;
+    });
+}
+
+animate();
+
+// 창 크기 변경 대응
+window.addEventListener('resize', () => {
+    letterElems.forEach(obj => {
+        obj.el.style.left = `${Math.random() * window.innerWidth}px`;
+        obj.el.style.top = `${Math.random() * window.innerHeight}px`;
+    });
+});
+</script>
 
 </body>
 </html>

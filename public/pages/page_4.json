@@ -67,7 +67,7 @@
   "input65": "",
   "input66": "",
   "input67": "",
-  "input68": "",
+  "input68": "\\",
   "input69": "",
   "input70": "",
   "input71": "",
@@ -187,5 +187,7 @@
   "input550": "f",
   "input551": "f",
   "input552": "f",
-  "input610": "f"
+  "input610": "f",
+  "input609": "",
+  "input608": ""
 }

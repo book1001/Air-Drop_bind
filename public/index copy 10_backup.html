@@ -202,34 +202,7 @@
     position: fixed; 
     top: 3px;
     left: 9px;
-    width: 550px;
-    z-index: 3; 
-    /* font-family: 'FKGroteskNeueTrial-Bold'; */
-    /* font-family: 'AppleChancery';
-    color: red;
-    font-size: 36px; */
-    /* text-shadow: 0 0 1px #ffffff;
-    letter-spacing: 0.027em;
-    text-transform: uppercase;
-    text-align: justify; */
-
-    /* color: #ff6ff7; */
-
-    /* font-family: Menlo-Regular;
-    font-size: 24px;
-    background: black;
-    text-transform: uppercase; */
-    font-family: 'FKGroteskNeueTrial-Bold';
-    font-size: 19px;
-    /* color: black;
-    text-shadow: 0 0 6px #ffffff; */
-  }
-
-  #info2 {
-    position: fixed; 
-    top: 3px;
-    right: 9px;
-    width: 20%;
+    width: 100%;
     z-index: 3; 
     /* font-family: 'FKGroteskNeueTrial-Bold'; */
     /* font-family: 'AppleChancery';
@@ -274,14 +247,7 @@
   
   <div id="bg"></div>
   <div id="info">
-    Travel across the globe and leave your message in the air. The pages covering the sky will be bound into a collective volume on your mobile. Together, as a global community, we bind the air into a shared book — turning borders into pages that connect us. 
-    <br><br>
-    <img src="icon/icon_cmd_arrows2.svg" style="height: 20px; vertical-align: text-top; filter: drop-shadow(0 0 6px white);"> Move Between Pages<br>
-    <img src="icon/icon_arrows2.svg" style="height: 20px; vertical-align: text-top; filter: drop-shadow(0 0 6px white);"> Move the Typing Area<br>
-    <!-- <img src="icon/icon_ko2.svg" style="height: 20px; vertical-align: text-top; filter: drop-shadow(0 0 6px white);"> Press Enter After Typing -->
-  </div>
-  <div id="info2">
-    
+    By scanning the QR code on the wall, the sky’s scattered pages come together on their mobile devices.
   </div>
 
   <script type="text/javascript" src="bg.js"></script>
@@ -1195,40 +1161,9 @@
 
     function setupInput(input, pageId, inputIndex){
       let isComposing = false;
-      let composedText = "";
 
-      // 입력 옵션
-      input.inputMode = 'text';
-      input.autocapitalize = 'off';
-      input.autocorrect = 'off';
-      input.spellcheck = false;
-      input.style.imeMode = 'active'; // IME 사용 가능
-
-       // ✅ IME(중국어, 한자 등) 입력 시작
-      input.addEventListener("compositionstart", () => {
-        isComposing = true;
-        composedText = "";
-      });
-
-      // ✅ 조합 중 업데이트
-      input.addEventListener("compositionupdate", (e) => {
-        composedText = e.data || "";
-      });
-
-      // ✅ 조합 완료 (단어 확정 시점)
-      input.addEventListener("compositionend", (e) => {
-        isComposing = false;
-        composedText = e.data || composedText;
-
-        if (composedText && composedText.trim().length > 0) {
-          distributeCharacters(composedText);
-          socket.emit('inputChange', { pageId, inputIndex, value: composedText });
-          // composedText = "";
-          // input.value = ""; // 남은 문자 초기화
-        }
-      });
-
-
+      input.addEventListener('compositionstart', () => isComposing = true);
+      input.addEventListener('compositionend', () => isComposing = false);
 
       // ✅ 선택되거나 포커스되면 .input-selected 적용
       const applySelectedClass = () => {
@@ -1262,7 +1197,6 @@
       });
 
       input.addEventListener('keydown', (e) => {
-        if(isComposing) return; // IME 입력 중에는 방향키 이동 금지
         const currentIndex = allInputs.indexOf(input);
 
         // ✅ 백스페이스 시 이전 input으로 이동
@@ -1306,7 +1240,7 @@
         }
 
         // 🔹 ArrowDown 또는 Enter → 아래로 이동
-        if(e.key === 'ArrowDown'){
+        if(e.key === 'ArrowDown' || e.key === 'Enter'){
           e.preventDefault();
           const down = allInputs[currentIndex + 15];
           if(down){
@@ -1314,14 +1248,6 @@
             down.classList.add('input-selected');
           }
         }
-        // if(e.key === 'ArrowDown' || e.key === 'Enter'){
-        //   e.preventDefault();
-        //   const down = allInputs[currentIndex + 15];
-        //   if(down){
-        //     down.focus();
-        //     down.classList.add('input-selected');
-        //   }
-        // }
 
         // ✅ Command(mac) / Ctrl(Windows) + ArrowUp / ArrowDown
         if ((e.metaKey || e.ctrlKey) && e.keyCode === 37) { // ArrowLeft
@@ -1364,35 +1290,25 @@
           }
         }
 
+        // if ((e.metaKey || e.ctrlKey) && (e.key === 'ArrowUp')) {
+        //   e.preventDefault();
+        //   const up = allInputs[currentIndex - 2880];
+        //   if(up){
+        //     up.focus();
+        //     up.classList.add('input-selected');
+        //   }
+        // }
+
+        // if ((e.metaKey || e.ctrlKey) && (e.key === 'ArrowDown')) {
+        //   e.preventDefault();
+        //   const down = allInputs[currentIndex + 2880];
+        //   if(down){
+        //     down.focus();
+        //     down.classList.add('input-selected');
+        //   }
+        // }
+
       });
-
-      function distributeCharacters(text) {
-        const chars = [...text]; // 한자, 한글, 이모지 모두 처리
-        let currentIndex = allInputs.indexOf(input);
-
-        chars.forEach((ch) => {
-          if (currentIndex >= allInputs.length) return;
-
-          const target = allInputs[currentIndex];
-          target.value = ch;
-          target.classList.add("input-texted");
-
-          socket.emit("inputChange", {
-            pageId,
-            inputIndex: currentIndex,
-            value: ch
-          });
-
-          currentIndex++;
-        });
-
-        // 마지막 입력 후 포커스 이동
-        if (currentIndex < allInputs.length) {
-          allInputs[currentIndex].focus();
-        } else {
-          allInputs[allInputs.length - 1].focus();
-        }
-      }
       
     }
 

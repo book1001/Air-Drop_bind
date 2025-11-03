@@ -34,6 +34,13 @@
   src: url('./font/AppleChancery.woff') format('woff');
 }
 
+@font-face {
+  font-family: 'AppleColorEmoji';
+  src: url('./font/AppleColorEmoji.ttc') format('truetype'); 
+  font-weight: normal;
+  font-style: normal;
+}
+
 :lang(ko) {
   font-family: "Noto Sans KR", sans-serif;
   font-optical-sizing: auto;
@@ -70,7 +77,7 @@
 
 
 html, body {
-  font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
+  font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', 'AppleColorEmoji', sans-serif;
 }
 
 .material-symbols-outlined {
