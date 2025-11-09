@@ -62,11 +62,10 @@
   <button id="nextBtn"><span class="material-symbols-outlined variBtn">arrow_forward_ios</span></button>
 </div>
 
-
 <script>
 const socket = io();
 
-const totalPages = 66; // 0~65
+const totalPages = 66;
 const inputsCount = 180;
 let currentPage = 0;
 
@@ -88,11 +87,75 @@ for (let i = 0; i < inputsCount; i++) {
   inputsContainer.appendChild(input);
   inputElements.push(input);
 
+  let isComposing = false;
+  let composedText = "";
+
+  // compositionstart
+  input.addEventListener("compositionstart", () => {
+    isComposing = true;
+    composedText = "";
+  });
+
+  // compositionupdate
+  input.addEventListener("compositionupdate", (e) => {
+    composedText = e.data || "";
+  });
+
+  // compositionend
+  input.addEventListener("compositionend", (e) => {
+    isComposing = false;
+    const text = e.data || composedText;
+    composedText = "";
+
+    if (!text || text.trim().length === 0) return;
+
+    const chars = [...text];
+    let serverIndex = parseInt(input.dataset.index);      // 서버 저장용
+    let focusIndex = inputElements.indexOf(input);        // 포커스 이동용
+
+    chars.forEach((ch) => {
+      if (serverIndex >= inputElements.length) return;
+      if (focusIndex >= inputElements.length) return;
+
+      const target = inputElements[focusIndex];
+      target.value = ch;
+      target.classList.add("input-texted");
+
+      // 서버 저장
+      socket.emit("inputChange", {
+        pageId: currentPage,
+        inputIndex: serverIndex,
+        value: ch
+      });
+
+      serverIndex++;
+      focusIndex++;
+    });
+
+    // 마지막 글자 뒤로 포커스 이동
+    if (focusIndex < inputElements.length) {
+      inputElements[focusIndex].focus();
+    } else {
+      inputElements[inputElements.length - 1].focus();
+    }
+  });
+
+  // 포커스 또는 클릭 시 selected 상태 적용
+  const applySelected = () => {
+    inputElements.forEach(i => i.classList.remove("input-selected"));
+    input.classList.add("input-selected");
+    input.select();
+  };
+  input.addEventListener("focus", applySelected);
+  input.addEventListener("click", applySelected);
+
+  // 일반 input 이벤트
   input.addEventListener("input", (e) => {
+    if (isComposing) return;
+
     const index = parseInt(e.target.dataset.index);
     const value = e.target.value;
 
-    // 페이지 JSON 처리: 표지/뒷표지 제외
     if (currentPage >= 1 && currentPage <= totalPages - 2) {
       socket.emit("inputChange", {
         pageId: currentPage,
@@ -100,28 +163,75 @@ for (let i = 0; i < inputsCount; i++) {
         value
       });
     }
+
+    if (value.trim() !== "") {
+      input.classList.add("input-texted");
+    } else {
+      input.classList.remove("input-texted");
+    }
+
+    // 한 글자 입력 후 자동 이동
+    const currentIndex = inputElements.indexOf(input);
+    if (value.length === 1 && currentIndex < inputElements.length - 1) {
+      const nextInput = inputElements[currentIndex + 1];
+      nextInput.focus();
+      nextInput.classList.add("input-selected");
+    }
+  });
+
+  // 백스페이스 처리
+  input.addEventListener("keydown", (e) => {
+    const currentIndex = inputElements.indexOf(input);
+
+    if (e.key === "Backspace") {
+      if (input.value !== "") {
+        // 현재 글자 삭제 + 서버 반영
+        socket.emit("inputChange", {
+          pageId: currentPage,
+          inputIndex: currentIndex,
+          value: ""
+        });
+        input.value = "";
+        return;
+      }
+
+      // 이전 input 존재 시
+      if (currentIndex > 0) {
+        e.preventDefault();
+        const prev = inputElements[currentIndex - 1];
+        if (prev) {
+          prev.focus();
+          prev.classList.add("input-selected");
+          prev.select();
+
+          // 이전 input 즉시 삭제 + 서버 반영
+          prev.value = "";
+          socket.emit("inputChange", {
+            pageId: currentPage,
+            inputIndex: currentIndex - 1,
+            value: ""
+          });
+        }
+      }
+    }
   });
 }
 
 // 페이지 로드
 function loadPage(pageId) {
   if (pageId < 0) pageId = 0;
-  if (pageId >= totalPages) pageId = totalPages -1;
-
+  if (pageId >= totalPages) pageId = totalPages - 1;
   currentPage = pageId;
 
-  // 페이지 번호 표시 (표지/뒷표지 제외)
   if (currentPage === 0 || currentPage === totalPages - 1) {
     pageIndicator.style.display = "none";
   } else {
     pageIndicator.style.display = "inline-block";
     pageIndicator.textContent = `${currentPage}`;
-    // pageIndicator.textContent = `Page ${currentPage} / ${totalPages}`;
   }
 
   pageSlider.value = currentPage;
 
-  // 표지/뒷표지 처리
   if (currentPage === 0) {
     coverContainer.style.display = "block"; 
     backcoverContainer.style.display = "none"; 
@@ -135,7 +245,6 @@ function loadPage(pageId) {
     backcoverContainer.style.display = "none"; 
     inputElements.forEach(input => input.style.display = "block");
 
-    // 서버에서 페이지 데이터 요청
     socket.emit("requestPlaneData", currentPage);
   }
 }
@@ -160,11 +269,7 @@ socket.on("updateInput", ({ pageId, inputIndex, value }) => {
 // Prev/Next 버튼
 prevBtn.addEventListener("click", () => loadPage(currentPage - 1));
 nextBtn.addEventListener("click", () => loadPage(currentPage + 1));
-
-// 슬라이더 이벤트
-pageSlider.addEventListener("input", (e) => {
-  loadPage(parseInt(e.target.value));
-});
+pageSlider.addEventListener("input", (e) => loadPage(parseInt(e.target.value)));
 
 // 초기 페이지
 loadPage(0);
