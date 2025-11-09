@@ -25,6 +25,7 @@ canvas {
   right: 10px; 
   font-family: 'FKGroteskNeueTrial-Bold';
   font-size: 15px;
+  z-index: 3;
 }
 
 #cover {
@@ -144,6 +145,7 @@ button {
   color: black;
   -webkit-text-fill-color: black;
   font-size: 0;
+  cursor: pointer;
 }
 
 #pageIndicator { 
