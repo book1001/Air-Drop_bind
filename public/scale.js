@@ -1,6 +1,6 @@
 function scaleInputs() {
-  const wrapper = document.getElementById("inputs-wrapper");
-  const inputs = document.getElementById("inputs");
+  const wrapper = document.getElementById("pages-scale");
+  const pages = document.getElementById("pages");
 
   const wrapperW = wrapper.clientWidth;
   const wrapperH = wrapper.clientHeight;
@@ -11,7 +11,7 @@ function scaleInputs() {
 
   const scale = Math.min(wrapperW / baseDeviceW, wrapperH / baseDeviceH);
 
-  inputs.style.transform = `scale(${scale})`;
+  pages.style.transform = `scale(${scale})`;
 }
 
 window.addEventListener("resize", scaleInputs);

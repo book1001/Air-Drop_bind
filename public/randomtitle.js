@@ -5,7 +5,7 @@ const maxVisible = 3;
 // 글자 요소 생성
 letters.forEach(l => {
     const span = document.createElement('span');
-    span.className = 'letter';
+    span.className = 'floater';
     span.textContent = l;
     document.body.appendChild(span);
     

@@ -23,26 +23,26 @@
 
 <body>
 
-<!-- ========================================================== -->
-<!-- bg -->
-<!-- ========================================================== -->
 <div id="bg"></div>
 <!-- <div id="info"></div> -->
 
+<button id="saveBtn" class="variBtn">
+  PDF downlaod
+</button>
 
-<!-- ========================================================== -->
-<!-- Book -->
-<!-- ========================================================== -->
-<div class="book" id="currentPage">
-  <div id="pages-scale">
-    <div id="pages" class="variBtn">
 
-      <div id="cover-front">
+<div class="page" id="currentPage">
+  <div id="inputs-wrapper">
+    <div id="inputs" class="variBtn">
+
+      <div id="cover">
         <h1>Dear Reader</h1><br>
         <p style="font-family: 'FKGroteskNeueTrial-Bold'; margin-block-start: 0; margin-block-end: 0;">
           Travel across the globe and leave your message in the air. The pages covering the sky will be bound into a collective volume on your mobile. Together, as a global community, we bind the air into a shared book — turning borders into pages that connect us. 
         </p>
       </div>
+
+      <span id="pageIndicator"></span>
 
       <div id="cover-back">
         <p>
@@ -55,24 +55,13 @@
 </div>
 
 
-<!-- ========================================================== -->
-<!-- Side: Pre/Next Buttons -->
-<!-- ========================================================== -->
-<button id="prevBtn"><span class="material-symbols-outlined variBtn">arrow_back_ios_new</span></button>
-<button id="nextBtn"><span class="material-symbols-outlined variBtn">arrow_forward_ios</span></button>
 
+<div id="controls">
+  <button id="prevBtn"><span class="material-symbols-outlined variBtn">arrow_back_ios_new</span></button>
+  <input type="range" id="pageSlider" min="0" max="65" value="0">
+  <button id="nextBtn"><span class="material-symbols-outlined variBtn">arrow_forward_ios</span></button>
+</div>
 
-<!-- ========================================================== -->
-<!-- Bottom: Menu -->
-<!-- ========================================================== -->
-<input type="range" id="pageSlider" min="0" max="65" value="0">
-
-<span id="pageIndicator"></span>
-
-<button id="saveBtn" class="variBtn">PDF downlaod</button>
-
-
-<!-- ========================================================== -->
 <script>
 const socket = io();
 
@@ -80,9 +69,9 @@ const totalPages = 66;
 const inputsCount = 180;
 let currentPage = 0;
 
-const coverContainer = document.getElementById("cover-front");
+const coverContainer = document.getElementById("cover");
 const backcoverContainer = document.getElementById("cover-back");
-const inputsContainer = document.getElementById("pages");
+const inputsContainer = document.getElementById("inputs");
 const pageIndicator = document.getElementById("pageIndicator");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -90,23 +79,12 @@ const pageSlider = document.getElementById("pageSlider");
 
 // input 생성
 const inputElements = [];
-let rowContainer = null;
-
 for (let i = 0; i < inputsCount; i++) {
-
-  // 15개마다 새로운 div 생성
-  if (i % 15 === 0) {
-    rowContainer = document.createElement("div");
-    rowContainer.classList.add("line");
-    inputsContainer.appendChild(rowContainer);
-  }
-
-  const input = document.createElement("span");
-  input.contentEditable = "true"; 
+  const input = document.createElement("input");
+  input.type = "text"; 
+  input.maxLength = 1;
   input.dataset.index = i;
-  input.classList.add("letter");
-  // inputsContainer.appendChild(input);
-  rowContainer.appendChild(input);
+  inputsContainer.appendChild(input);
   inputElements.push(input);
 
   let isComposing = false;
@@ -158,12 +136,12 @@ for (let i = 0; i < inputsCount; i++) {
     // if (focusIndex < inputElements.length) {
     //   setTimeout(() => {
     //     inputElements[focusIndex].focus();
-    //     inputElements[focusIndex].classList.add("letter-selected");
+    //     inputElements[focusIndex].classList.add("input-selected");
     //   }, 0);
     // } else {
     //   setTimeout(() => {
     //     inputElements[inputElements.length - 1].focus();
-    //     inputElements[inputElements.length - 1].classList.add("letter-selected");
+    //     inputElements[inputElements.length - 1].classList.add("input-selected");
     //   }, 0);
     // }
     if (focusIndex < inputElements.length) {
@@ -175,15 +153,9 @@ for (let i = 0; i < inputsCount; i++) {
 
   // 포커스 또는 클릭 시 selected 상태 적용
   const applySelected = () => {
-    inputElements.forEach(i => i.classList.remove("letter-selected"));
-    input.classList.add("letter-selected");
-    // input.select();
-    // 커서 전체 선택
-    const range = document.createRange();
-    range.selectNodeContents(input);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
+    inputElements.forEach(i => i.classList.remove("input-selected"));
+    input.classList.add("input-selected");
+    input.select();
   };
   input.addEventListener("focus", applySelected);
   input.addEventListener("click", applySelected);
@@ -193,7 +165,7 @@ for (let i = 0; i < inputsCount; i++) {
     if (isComposing) return;
 
     const index = parseInt(e.target.dataset.index);
-    const value = e.target.textContent;
+    const value = e.target.value;
 
     if (currentPage >= 1 && currentPage <= totalPages - 2) {
       socket.emit("inputChange", {
@@ -213,14 +185,8 @@ for (let i = 0; i < inputsCount; i++) {
     const currentIndex = inputElements.indexOf(input);
     if (value.length === 1 && currentIndex < inputElements.length - 1) {
       const nextInput = inputElements[currentIndex + 1];
-      // nextInput.focus();
-      const range = document.createRange();
-      const sel = window.getSelection();
-      range.selectNodeContents(nextInput);
-      range.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      nextInput.classList.add("letter-selected");
+      nextInput.focus();
+      nextInput.classList.add("input-selected");
     }
   });
 
@@ -245,19 +211,12 @@ for (let i = 0; i < inputsCount; i++) {
         e.preventDefault();
         const prev = inputElements[currentIndex - 1];
         if (prev) {
-          // prev.focus();
-          const range = document.createRange();
-          const sel = window.getSelection();
+          prev.focus();
+          prev.classList.add("input-selected");
+          prev.select();
 
-          range.selectNodeContents(prev);
-          range.collapse(false); // 끝으로 이동
-          sel.removeAllRanges();
-          sel.addRange(range);
-
-          prev.classList.add("letter-selected");
-          // prev.select();
+          // 이전 input 즉시 삭제 + 서버 반영
           prev.value = "";
-
           socket.emit("inputChange", {
             pageId: currentPage,
             inputIndex: currentIndex - 1,
@@ -305,7 +264,7 @@ function loadPage(pageId) {
 socket.on("loadPlaneData", ({ pageId, data }) => {
   if (pageId !== currentPage) return;
   for (let i = 0; i < inputsCount; i++) {
-    inputElements[i].textContent = data[`input${i}`] || '';
+    inputElements[i].value = data[`input${i}`] || '';
   }
 });
 
@@ -314,7 +273,7 @@ socket.on("updateInput", ({ pageId, inputIndex, value }) => {
   if (pageId === currentPage) {
     const idx = parseInt(inputIndex);
     const input = inputElements[idx];
-    if(input) input.textContent = value || '';
+    if(input) input.value = value || '';
   }
 });
 
