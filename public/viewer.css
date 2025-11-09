@@ -2,6 +2,7 @@
 /* Default */
 /* ========================================================== */
 html, body {
+  height: 100%;
   margin: 0; 
   padding: 0; 
   overflow: hidden;
@@ -131,6 +132,7 @@ button {
 .letter {
   min-width: 10px;
   height: 28px;
+  line-height: 28px;
   border: 1px solid;
   outline: none;
   font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
