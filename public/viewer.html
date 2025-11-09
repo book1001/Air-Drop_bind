@@ -134,10 +134,21 @@ for (let i = 0; i < inputsCount; i++) {
 
     // 마지막 글자 뒤로 포커스 이동
     if (focusIndex < inputElements.length) {
-      inputElements[focusIndex].focus();
+      setTimeout(() => {
+        inputElements[focusIndex].focus();
+        inputElements[focusIndex].classList.add("input-selected");
+      }, 0);
     } else {
-      inputElements[inputElements.length - 1].focus();
+      setTimeout(() => {
+        inputElements[inputElements.length - 1].focus();
+        inputElements[inputElements.length - 1].classList.add("input-selected");
+      }, 0);
     }
+    // if (focusIndex < inputElements.length) {
+    //   inputElements[focusIndex].focus();
+    // } else {
+    //   inputElements[inputElements.length - 1].focus();
+    // }
   });
 
   // 포커스 또는 클릭 시 selected 상태 적용
