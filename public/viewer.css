@@ -94,7 +94,17 @@ input[type="text"] {
   border-radius: 0; 
   -webkit-appearance: none;
   appearance: none;
+
+  /* 텍스트 선택 방지 */
+  user-select: none;
+  -webkit-user-select: none; /* Safari/Chrome */
+  
+  /* 선택 메뉴 (복사, 붙여넣기) 방지 */
+  -webkit-touch-callout: none; 
 }
+
+
+
 
 input[type="range"] {
   -webkit-appearance: none;
