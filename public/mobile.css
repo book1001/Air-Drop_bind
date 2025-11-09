@@ -157,7 +157,27 @@ button {
 /* ========================================================== */
 /* Side: Pre/Next Buttons */
 /* ========================================================== */
+#prevBtn {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: calc(100% - 90px);
+  z-index: 3;
+  /* background: red;
+  opacity: 0.5; */
+}
 
+#nextBtn {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 50px;
+  height: calc(100% - 90px);
+  z-index: 3;
+  /* background: red;
+  opacity: 0.5; */
+}
 
 /* ========================================================== */
 /* Bottom: Menu */
@@ -177,15 +197,15 @@ button {
 
 input[type="range"] {
   position: fixed;
-  bottom: 65px;
+  bottom: 60px;
   left: 50%;
   -webkit-transform: translateX(-50%);
   -moz-transform: translateX(-50%);
   -ms-transform: translateX(-50%);
   -o-transform: translateX(-50%);
   transform: translateX(-50%);
-  width: calc(100% - 20px);
-  height: 3px;
+  width: calc(100% - 16px);
+  height: 2px;
   margin: 0;
   /* border: 2px inset; */
   /* border-radius: 2px; */
@@ -200,8 +220,8 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   background: white;
   cursor: pointer;
   filter: drop-shadow(0 0 2px white);
@@ -209,8 +229,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   background: white;
   cursor: pointer;
   filter: drop-shadow(0 0 2px black);

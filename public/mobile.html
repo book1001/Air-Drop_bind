@@ -8,11 +8,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_back_ios_new,arrow_forward_ios" />
 
 <link rel="stylesheet" href="font.css">
-<link rel="stylesheet" href="viewer.css">
+<link rel="stylesheet" href="mobile.css">
 <link rel="stylesheet" href="bg.css">
-<!-- <link rel="stylesheet" href="index.css">
-<link rel="stylesheet" href="index_detail.css">
-<link rel="stylesheet" href="index_media.css"> -->
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -27,7 +24,6 @@
 <!-- bg -->
 <!-- ========================================================== -->
 <div id="bg"></div>
-<!-- <div id="info"></div> -->
 
 
 <!-- ========================================================== -->
@@ -59,8 +55,10 @@
 <!-- ========================================================== -->
 <!-- Side: Pre/Next Buttons -->
 <!-- ========================================================== -->
-<button id="prevBtn"><span class="material-symbols-outlined variBtn">arrow_back_ios_new</span></button>
-<button id="nextBtn"><span class="material-symbols-outlined variBtn">arrow_forward_ios</span></button>
+<button id="prevBtn"></button>
+<button id="nextBtn"></button>
+<!-- <button id="prevBtn"><span class="material-symbols-outlined variBtn">arrow_back_ios_new</span></button>
+<button id="nextBtn"><span class="material-symbols-outlined variBtn">arrow_forward_ios</span></button> -->
 
 
 <!-- ========================================================== -->
@@ -327,10 +325,10 @@ pageSlider.addEventListener("input", (e) => loadPage(parseInt(e.target.value)));
 loadPage(0);
 </script>
 
-<script type="text/javascript" src="pdfgenerator.js"></script>
-<script type="text/javascript" src="bg_m.js"></script>
-<script type="text/javascript" src="randomtitle.js"></script>
-<script type="text/javascript" src="scale.js"></script>
+<script type="text/javascript" src="m_bg.js"></script>
+<script type="text/javascript" src="m_floater.js"></script>
+<script type="text/javascript" src="m_pdf.js"></script>
+<script type="text/javascript" src="m_scale.js"></script>
 
 </body>
 </html>
