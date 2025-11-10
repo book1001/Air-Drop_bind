@@ -16,6 +16,7 @@
 <!-- jsPDF & html2canvas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.cjk.min.js"></script>
 </head>
 
 <body>
@@ -34,7 +35,7 @@
     <div id="pages" class="variBtn">
 
       <div id="cover-front">
-        <h1>Dear Reader</h1><br>
+        <!-- <h1>Dear Reader</h1><br> -->
         <p style="font-family: 'FKGroteskNeueTrial-Bold'; margin-block-start: 0; margin-block-end: 0;">
           Travel across the globe and leave your message in the air. The pages covering the sky will be bound into a collective volume on your mobile. Together, as a global community, we bind the air into a shared book — turning borders into pages that connect us. 
         </p>
@@ -327,6 +328,7 @@ loadPage(0);
 
 <script type="text/javascript" src="m_bg.js"></script>
 <script type="text/javascript" src="m_floater.js"></script>
+<script type="text/javascript" src="m_pdf_font.js"></script>
 <script type="text/javascript" src="m_pdf.js"></script>
 <script type="text/javascript" src="m_scale.js"></script>
 

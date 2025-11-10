@@ -1,6 +1,14 @@
 const bg = document.getElementById('bg');
 // const pageSlider = document.getElementById('pageSlider');
 const variBtns = document.querySelectorAll('.variBtn');
+const variBgs = document.querySelectorAll('.variBg');
+
+let sliderStyleTag = document.getElementById('slider-style');
+if (!sliderStyleTag) {
+  sliderStyleTag = document.createElement('style');
+  sliderStyleTag.id = 'slider-style';
+  document.head.appendChild(sliderStyleTag);
+}
 
 
 // 시간대별 linear-gradient + 글자색/그림자
@@ -54,6 +62,22 @@ function updateBackground(){
     btn.style.webkitTextFillColor = current.color;
     // btn.style.textShadow = current.textShadow;
   });
+
+  variBgs.forEach(bg => {
+    bg.style.background = current.color;
+  });
+
+  // input[type="range"] thumb 색상 적용
+  if(pageSlider){
+    sliderStyleTag.innerHTML = `
+      #pageSlider::-webkit-slider-thumb {
+        background: ${current.color};
+      }
+      #pageSlider::-moz-range-thumb {
+        background: ${current.color};
+      }
+    `;
+  }
 
   setTimeout(updateBackground, getNextChangeTime());
 }

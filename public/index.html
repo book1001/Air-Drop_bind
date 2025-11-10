@@ -20,20 +20,20 @@
 
 <style>
   html,body {
-    -webkit-touch-callout: none;
+    /* -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    user-select: none;
+    user-select: none; */
   }
 
   body {
     margin: 0;
     background: black;
-    /* background-image: url("img/sky_1.jpg"); */
     overflow: hidden;
-    cursor: grab;
+    cursor: text;
+    /* cursor: grab; */
   }
 
   canvas {
@@ -41,8 +41,7 @@
     top: 0;
     left: 0;
     z-index: 0;
-    pointer-events: none;
-    /* background: linear-gradient(0deg,rgba(0, 251, 255, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 249, 255, 1) 18%, rgba(0, 220, 255, 1) 65%); */
+    /* pointer-events: none; */
   }
 
   #cssRenderer {
@@ -55,17 +54,27 @@
 
   /* --- plane-wrapper --- */
   .plane-wrapper {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: center;
+    /* display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center; */
+    /* display: grid; */
     /* grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(12, 1fr); */
     backface-visibility: hidden;
     transform-style: preserve-3d;
     will-change: transform;
-    image-rendering: pixelated;
+    image-rendering: auto;
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
 
-    grid-auto-columns: 1fr; 
+    /* grid-auto-columns: 1fr; 
     grid-auto-rows: 1fr; 
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
@@ -84,20 +93,23 @@
       ". . . . . . . . ."
       ". . . . . . . . ."
       ". . . . . . . . ."
-      ". . . . . . . . ."; 
+      ". . . . . . . . .";  */
     /* background: red; */
   }
 
   /* --- input field --- */
   .inputPlane {
-    width: 100%;
-    height: 100%;
+    display: inline-block;
+    min-width: 11px;
+    height: 18px;
+    /* width: 100%;
+    height: 100%; */
     /* width: 6px;
     height: 9px; */
     padding: 0;
     margin: 0;
     font-size: 11px;
-    line-height: 9px;
+    line-height: 18px;
     text-align: center;
     font-family: FKGroteskMonoTrial-Regular;
     text-transform: uppercase;
@@ -114,15 +126,16 @@
     -webkit-font-smoothing: none !important;
     text-rendering: geometricPrecision;
     filter: none;
-    transform: translate3d(0, 0, 0) scale(1.0001);
+    /* transform: translate3d(0, 0, 0) scale(1); */
+    transform: none; /* 추가 */
     backface-visibility: hidden;
 
-    -webkit-touch-callout: none;
+    /* -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    user-select: none;
+    user-select: none; */
   }
 
   /* 포커스 시에도 blur 안 생김 */
@@ -131,13 +144,72 @@
     border: none;
     outline: none;
     filter: none;
-    transform: translate3d(0, 0, 0) scale(1.0001);
+    /* transform: translate3d(0, 0, 0) scale(1); */
+  }
+
+    .inputPlaneTop {
+    display: inline-block;
+    min-width: 10px;
+    height: 12px;
+    /* width: 100%;
+    height: 100%; */
+    /* width: 6px;
+    height: 9px; */
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+    line-height: 12px;
+    text-align: center;
+    font-family: FKGroteskMonoTrial-Regular;
+    text-transform: uppercase;
+    border: 1px solid white;
+    border: none;
+    color: white;
+    font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
+    text-shadow: 0 0 1px #ffffff;
+    background: transparent;
+    pointer-events: auto;
+    outline: none;
+
+    /* ✨ 핵심: 흐림 제거 */
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision;
+    filter: none;
+    /* transform: translate3d(0, 0, 0) scale(1); */
+    transform: none; /* 추가 */
+    backface-visibility: hidden;
+
+    /* -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none; */
+    pointer-events: auto;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* 포커스 시에도 blur 안 생김 */
+  .inputPlaneTop:focus {
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: none;
+  }
+
+  .line {
+    font-size: 0;
   }
 
   .input-selected {
-    border: 1px solid yellow !important;
+    box-shadow: inset 0 0 0 1px yellow !important;
+    /* border: 1px solid yellow !important; */
     color: transparent !important;
     /* background: yellow !important; */
+    pointer-events: auto;
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   .input-texted {
@@ -185,16 +257,6 @@
     }
   }
 
-
-  /* #bg-video {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    z-index: -1;
-  } */
-
   #info {
     position: fixed; 
     top: 3px;
@@ -223,32 +285,6 @@
     text-shadow: 0 0 6px #ffffff; */
   }
 
-  #info2 {
-    position: fixed; 
-    top: 3px;
-    right: 9px;
-    width: 20%;
-    z-index: 3; 
-    /* font-family: 'FKGroteskNeueTrial-Bold'; */
-    /* font-family: 'AppleChancery';
-    color: red;
-    font-size: 36px; */
-    /* text-shadow: 0 0 1px #ffffff;
-    letter-spacing: 0.027em;
-    text-transform: uppercase;
-    text-align: justify; */
-
-    /* color: #ff6ff7; */
-
-    /* font-family: Menlo-Regular;
-    font-size: 24px;
-    background: black;
-    text-transform: uppercase; */
-    font-family: 'FKGroteskNeueTrial-Bold';
-    font-size: 19px;
-    /* color: black;
-    text-shadow: 0 0 6px #ffffff; */
-  }
 </style>
 
 <!-- script: socket -->
@@ -265,11 +301,6 @@
 </head>
 
 <body>
-  <!-- <div class="info">
-     command + > Move Right<br>
-     command + < Move Left<br>
-  </div> -->
-  
   <div id="bg"></div>
   <div id="info">
     Travel across the globe and leave your message in the air. The pages covering the sky will be bound into a collective volume on your mobile. Together, as a global community, we bind the air into a shared book — turning borders into pages that connect us. 
@@ -279,7 +310,7 @@
     <div id="icon_cmd_arrows" style="width: 74px; height: 20px; display: inline-block; vertical-align: text-top;"></div> Move Between Pages<br>
     <div id="icon_arrows" style="width: 32px; height: 20px; display: inline-block; vertical-align: text-top;"></div> Move the Typing Area<br>
 
-    <!-- <img src="icon/icon_ko2.svg" style="height: 20px; vertical-align: text-top; filter: drop-shadow(0 0 6px white);"> Press Enter After Typing -->
+    <!-- <img src="icon/icon_ko2.svg" style="height: 20px; height: 20px; display: inline-block; vertical-align: text-top;"> Press Enter After Typing -->
   </div>
 
   <script type="text/javascript" src="bg.js"></script>
@@ -344,87 +375,12 @@
     let prevMouseX = 0;
     let prevMouseY = 0;
 
-    // background gradients (생략 생략 - 동일)
-    // const gradients = {
-    //   dawn: ['#1a237e','#3949ab','#81d4fa'],
-    //   morning:['#81d4fa','#fff176','#ffb74d'],
-    //   noon:['#00afff','#4ADBFF','#ffffff'],
-    //   evening:['#00afff','#4ADBFF','#ffffff'],
-    //   night:['#00afff','#4ADBFF','#ffffff']
-    // };
-    // const gradients = {
-    //   dawn: ['#1a237e','#3949ab','#81d4fa'],
-    //   morning:['#81d4fa','#fff176','#ffb74d'],
-    //   noon:['#81d4fa','#fff176','#ffb74d'],
-    //   evening:['#ff8a65','#f06292','#ba68c8'],
-    //   night:['#00afff','#4ADBFF','#ffffff']
-    // };
-    // let currentPalette = gradients[getTimeOfDay()];
-    // let targetPalette = currentPalette.slice();
     let lastUpdate = 0;
 
-    function getTimeOfDay(){ const hour = new Date().getHours(); if(hour>=4 && hour<8) return 'dawn'; if(hour>=8 && hour<12) return 'morning'; if(hour>=12 && hour<17) return 'noon'; if(hour>=17 && hour<21) return 'evening'; return 'night'; }
-    function hexToRgb(hex){ if(hex.startsWith('rgb')){ const [r,g,b]=hex.match(/\d+/g).map(Number); return {r,g,b}; } const bigint=parseInt(hex.replace('#',''),16); return { r:(bigint>>16)&255, g:(bigint>>8)&255, b:bigint&255 }; }
-    function blendColors(c1,c2,t){ const a=hexToRgb(c1), b=hexToRgb(c2); const r=Math.round(a.r+(b.r-a.r)*t); const g=Math.round(a.g+(b.g-a.g)*t); const b2=Math.round(a.b+(b.b-a.b)*t); return `rgb(${r},${g},${b2})`; }
-    function updateGradient(time){
-      // const now = getTimeOfDay();
-      // if(time - lastUpdate > 10000){ targetPalette = gradients[now]; lastUpdate = time; }
-      // for(let i=0;i<3;i++) currentPalette[i] = blendColors(currentPalette[i], targetPalette[i], 0.02);
-      // const gradient = ctx.createLinearGradient(0,0,0,window.innerHeight);
-      // gradient.addColorStop(0, currentPalette[0]);
-      // gradient.addColorStop(0.5, currentPalette[1]);
-      // gradient.addColorStop(1, currentPalette[2]);
-      // ctx.fillStyle = gradient;
-      // ctx.fillRect(0,0,canvas.width,canvas.height);
-      // texture.needsUpdate = true;
-    }
-    // function updateGradient(time) {
-    //   const now = getTimeOfDay();
-    //   if (time - lastUpdate > 10000) {
-    //     targetPalette = gradients[now];
-    //     lastUpdate = time;
-    //   }
-
-    //   for (let i = 0; i < 3; i++)
-    //     currentPalette[i] = blendColors(currentPalette[i], targetPalette[i], 0.02);
-
-    //   const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
-    //   gradient.addColorStop(0, currentPalette[0]);
-    //   gradient.addColorStop(0.5, currentPalette[1]);
-    //   gradient.addColorStop(1, currentPalette[2]);
-    //   ctx.fillStyle = gradient;
-    //   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    //   // --- 감마 보정 (어둡게) ---
-    //   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    //   const data = imageData.data;
-    //   for (let i = 0; i < data.length; i += 4) {
-    //     const gamma = 2.4; // 1.8~2.4 사이에서 미세 조정 가능
-    //     data[i] = Math.pow(data[i] / 255, gamma) * 255;    // R
-    //     data[i + 1] = Math.pow(data[i + 1] / 255, 2.2) * 255; // G
-    //     data[i + 2] = Math.pow(data[i + 2] / 255, 2.2) * 255; // B
-    //   }
-    //   ctx.putImageData(imageData, 0, 0);
-    //   // -----------------
-
-    //   texture.needsUpdate = true;
-    // }
 
     let autoRotateSpeed = 0.05; // 자동 회전 속도
     let manualRotation = new THREE.Vector2(0,0); // Ctrl/Cmd 회전 저장
 
-    // --- 자동 회전 함수 ---
-    // function focusCameraOnInput(input) {
-    //   if (!input || !input.value.trim()) return; // 값 없으면 자동 회전 안 함
-
-    //   const object = input.__threeObj;
-    //   if (!object) return;
-
-    //   const targetDir = object.position.clone().normalize();
-    //   const m = new THREE.Matrix4().lookAt(new THREE.Vector3(0,0,0), targetDir, new THREE.Vector3(0,1,0));
-    //   targetQuaternion.setFromRotationMatrix(m);
-    //   isCameraMoving = true;
-    // }
 
     function focusCameraOnInput(input) {
       if (!input) return; // input이 없으면 종료
@@ -440,7 +396,16 @@
     }
 
 
-    
+    // span 전체 선택 기능 (input.select() 대체)
+    function selectSpanText(el) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+        
     // --- Init ---
     function init(){
       scene=new THREE.Scene();
@@ -612,8 +577,8 @@
 
 
       // planes + CSS3D inputs 생성 (원본 로직 유지)
-      const planeWidths=[100,100,150,150,100,100];
-      const planeHeights=[100,240,240,240,240,100];
+      const planeWidths=[100,100,165,165,100,100];
+      const planeHeights=[100,250,240,240,250,100];
       let inputCount = 1;
       let faceCount = 1;
 
@@ -636,22 +601,35 @@
 
 
 
-
+          // ✅ ✅ ✅ ✅ ✅ ✅ ✅ Input Creates
           for(let k=0;k<inputsCount;k++){
-            const input=document.createElement('input');
-            input.type='text'; 
-            input.className='inputPlane';
-            input.id='input'+(inputCount);
+            const input = document.createElement("span");
+            input.contentEditable = "true"; 
+            // input.className='inputPlane';
+
+             // ✅ pageId를 먼저 계산
+            const pageId = Math.floor((inputCount - 1) / inputsCount) + 1;
+
+            // ✅ page 1~16 또는 49~64 → inputPlaneTop 적용
+            if ((pageId >= 1 && pageId <= 16) || (pageId >= 49 && pageId <= 64)) {
+              input.className = "inputPlaneTop";
+            } else {
+              input.className = "inputPlane";
+            }
+
+            input.id = "input" + inputCount;
+            // input.id='input'+(inputCount);
+
             div.appendChild(input);
             allInputs.push(input);
 
-            const pageId = Math.floor((inputCount-1)/inputsCount) + 1; // 1부터 시작
+            // const pageId = Math.floor((inputCount-1)/inputsCount) + 1; // 1부터 시작
             const inputIndex = (inputCount-1) % inputsCount;
             setupInput(input, pageId, inputIndex);
             inputCount++;
             // input → camera 연결
             input.__threeObj = null; // 나중에 object 연결
-            input.addEventListener('input', () => { if(input.value.trim()!=='') focusCameraOnInput(input); });
+            input.addEventListener('input', () => { if(input.textContent.trim()!=='') focusCameraOnInput(input); });
         
           }
           // ✅ object 선언
@@ -661,8 +639,8 @@
           sphereGroup.add(object);
 
           // input ↔ object 연결
-          div.querySelectorAll('input').forEach(inp => inp.__threeObj = object);
-
+          div.querySelectorAll('span').forEach(inp => inp.__threeObj = object);
+          // div.querySelectorAll('input').forEach(inp => inp.__threeObj = object);
 
           if(font1){
             const textGeo = new TextGeometry(faceCount.toString(), {
@@ -720,93 +698,7 @@
         quat.setFromEuler(euler);
       }
       
-      // 윈도우 이벤트
-      // window.addEventListener('keydown', (e) => {
-      //   if(keys.hasOwnProperty(e.key)) keys[e.key] = true;
-      //   const currentInput = document.activeElement;
-      //   const currentIndex = allInputs.indexOf(currentInput);
-      //   if(e.key === 'ArrowRight'){ rotationY += speed; if(currentIndex >= 0 && currentIndex < allInputs.length - 1){ e.preventDefault(); allInputs[currentIndex + 1].focus(); } }
-      //   else if(e.key === 'ArrowLeft'){ rotationY -= speed; if(currentIndex > 0){ e.preventDefault(); allInputs[currentIndex - 1].focus(); } }
-      // });
-      // window.addEventListener('keyup', (e)=>{ if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
-      // window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); webGLRenderer.setSize(window.innerWidth, window.innerHeight); cssRenderer.setSize(window.innerWidth, window.innerHeight); });
 
-      // 윈도우 이벤트
-      // window.addEventListener('keydown', (e) => {
-      //   const currentInput = document.activeElement;
-      //   const currentIndex = allInputs.indexOf(currentInput);
-      //   const isCtrlOrCmd = e.ctrlKey || e.metaKey; // Ctrl (Win) or Cmd (Mac)
-      //   const speed = 0.1; // 기존 speed 값 사용
-
-      //   switch (e.keyCode) {
-      //     case 39: // →
-      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
-      //         e.preventDefault();
-      //         manualRotation.y -= speed; // Y축 로컬
-      //       } else if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
-      //         e.preventDefault();
-      //         allInputs[currentIndex + 1].focus();
-      //       }
-      //       break;
-
-      //     case 37: // ←
-      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
-      //         e.preventDefault();
-      //         manualRotation.y += speed;
-      //       } else if (currentIndex > 0) {
-      //         e.preventDefault();
-      //         allInputs[currentIndex - 1].focus();
-      //       }
-      //       break;
-
-      //     case 38: // ↑
-      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
-      //         e.preventDefault();
-      //         manualRotation.x += speed;
-      //       }
-      //       break;
-
-      //     case 40: // ↓
-      //       if (isCtrlOrCmd && (!currentInput || !currentInput.value.trim())) {
-      //         e.preventDefault();
-      //         manualRotation.x -= speed;
-      //       }
-      //       break;
-      //     // case 39: // →
-      //     //   if (isCtrlOrCmd) {
-      //     //     e.preventDefault();
-      //     //     rotationY += speed;
-      //     //   } else if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
-      //     //     e.preventDefault();
-      //     //     allInputs[currentIndex + 1].focus();
-      //     //   }
-      //     //   break;
-
-      //     // case 37: // ←
-      //     //   if (isCtrlOrCmd) {
-      //     //     e.preventDefault();
-      //     //     rotationY -= speed;
-      //     //   } else if (currentIndex > 0) {
-      //     //     e.preventDefault();
-      //     //     allInputs[currentIndex - 1].focus();
-      //     //   }
-      //     //   break;
-
-      //     // case 38: // ↑
-      //     //   if (isCtrlOrCmd) {
-      //     //     e.preventDefault();
-      //     //     rotationX -= speed;
-      //     //   }
-      //     //   break;
-
-      //     // case 40: // ↓
-      //     //   if (isCtrlOrCmd) {
-      //     //     e.preventDefault();
-      //     //     rotationX += speed;
-      //     //   }
-      //     //   break;
-      //   }
-      // });
 
       window.addEventListener('keyup', (e) => {
         if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
@@ -821,38 +713,55 @@
 
             
       // ✅ ✅ ✅ 마우스 드래그로 카메라 회전 기능 추가
-          
-      window.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-      });
+      // window.addEventListener('mousedown', (e) => {
+      //   isDragging = true;
+      //   prevMouseX = e.clientX;
+      //   prevMouseY = e.clientY;
+      //   playBgSound();
+      // });
 
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+      // window.addEventListener('mousemove', (e) => {
+      //   if (!isDragging) return;
+      //   playBgSound();
 
-        const deltaX = e.clientX - prevMouseX;  // 좌우 이동 → y축 회전
-        const deltaY = e.clientY - prevMouseY;  // 상하 이동 → x축 회전
+      //   const deltaX = e.clientX - prevMouseX;  // 좌우 이동 → y축 회전
+      //   const deltaY = e.clientY - prevMouseY;  // 상하 이동 → x축 회전
 
-        rotationY += deltaX * 0.005;
-        rotationX += deltaY * 0.005;
+      //   rotationY += deltaX * 0.005;
+      //   rotationX += deltaY * 0.005;
 
-        // 필요하면 상하 회전 제한
-        const maxX = Math.PI/2 - 0.01;
-        const minX = -Math.PI/2 + 0.01;
-        rotationX = Math.max(minX, Math.min(maxX, rotationX));
+      //   // 필요하면 상하 회전 제한
+      //   const maxX = Math.PI/2 - 0.01;
+      //   const minX = -Math.PI/2 + 0.01;
+      //   rotationX = Math.max(minX, Math.min(maxX, rotationX));
 
-        prevMouseX = e.clientX;
-        prevMouseY = e.clientY;
-      });
+      //   prevMouseX = e.clientX;
+      //   prevMouseY = e.clientY;
+      // });
 
-      window.addEventListener('mouseup', () => {
-        isDragging = false;
-      });
+      // window.addEventListener('mouseup', () => {
+      //   isDragging = false;
+      // });
 
-      
+      // ✅ init() 끝에서 호출
+      selectRandomInput();
 
     } // init()
+
+
+    // ✅✅✅ 랜덤 span 자동 선택
+    function selectRandomInput() {
+      const randomInput = allInputs[Math.floor(Math.random() * allInputs.length)];
+
+      allInputs.forEach(i => i.classList.remove("input-selected"));
+      randomInput.classList.add("input-selected");
+
+      setTimeout(() => {
+        randomInput.focus();           // ✅ 실제 포커스
+        selectSpanText(randomInput);   // ✅ 텍스트 선택
+      }, 30);
+      focusCameraOnInput(randomInput);
+    }
 
 
     // --- Input Event Setup ---
@@ -861,11 +770,23 @@
       let composedText = "";
 
       // 입력 옵션
-      input.inputMode = 'text';
-      input.autocapitalize = 'off';
-      input.autocorrect = 'off';
-      input.spellcheck = false;
-      input.style.imeMode = 'active'; // IME 사용 가능
+      // input.style.imeMode = 'active'; // IME 사용 가능
+      // input.addEventListener("beforeinput", e => {
+      //   if (e.inputType === "insertText" && e.data) {
+
+      //     // ✅ 이미 글자가 있으면 더 입력하지 않음
+      //     if (input.innerText.length >= 1) {
+      //       e.preventDefault();
+      //       moveToNextSpan(input);
+      //       return;
+      //     }
+
+      //     // ✅ 영문, 숫자, 기호 등 1글자만 허용
+      //     if (e.data.length > 1) e.data = e.data[0];
+      //   }
+      // });
+
+
 
        // ✅ IME(중국어, 한자 등) 입력 시작
       input.addEventListener("compositionstart", () => {
@@ -891,9 +812,10 @@
 
         chars.forEach((ch) => {
           if (serverIndex >= allInputs.length) return;
+          if (focusIndex >= allInputs.length) return;
 
           const target = allInputs[focusIndex];
-          target.value = ch;
+          target.textContent = ch;
           target.classList.add("input-texted");
 
           // 서버에 저장
@@ -916,32 +838,46 @@
       });
       
       // ✅ 선택되거나 포커스되면 .input-selected 적용
-      const applySelectedClass = () => {
+      const applySelected = () => {
         allInputs.forEach(i => i.classList.remove('input-selected')); // 기존 제거
         input.classList.add('input-selected'); // 현재 input에 추가
-        input.select(); // 전체 선택
+        // const range = document.createRange();
+        // range.selectNodeContents(input);
+        // const sel = window.getSelection();
+        // sel.removeAllRanges();
+        // sel.addRange(range);
+        selectSpanText(input);
+        // input.select(); // 전체 선택
       };
 
-      input.addEventListener('focus', applySelectedClass);
-      input.addEventListener('click', applySelectedClass);
+      input.addEventListener('focus', applySelected);
+      input.addEventListener('click', applySelected);
 
       input.addEventListener('input', (e) => {
         if(isComposing) return;
 
         // ✅ 현재 상태 업데이트 서버로 전송
-        socket.emit('inputChange', { pageId, inputIndex, value: input.value });
+        const value = input.textContent;
+        socket.emit('inputChange', { pageId, inputIndex, value });
+        // socket.emit('inputChange', { pageId, inputIndex, value: input.value });
 
         // ✅ 스타일 토글
-        input.value.trim() !== '' 
+        input.textContent.trim() !== '' 
           ? input.classList.add('input-texted')
           : input.classList.remove('input-texted');
 
         const currentIndex = allInputs.indexOf(input);
 
         // ✅ 한 글자 입력 후 자동 이동
-        if(input.value.length === 1 && currentIndex < allInputs.length - 1){
+        if(input.textContent.length === 1 && currentIndex < allInputs.length - 1){
           const nextInput = allInputs[currentIndex + 1];
-          nextInput.focus();
+          // nextInput.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(nextInput);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
           nextInput.classList.add('input-selected');
         }
       });
@@ -951,16 +887,26 @@
         const currentIndex = allInputs.indexOf(input);
 
         // ✅ 백스페이스 시 이전 input으로 이동
-        if(e.key === 'Backspace' && input.value === '' && currentIndex > 0){
+        if(e.key === 'Backspace' && input.textContent === '' && currentIndex > 0){
           e.preventDefault();
-          input.value = '';
+          input.textContent = '';
+          // input.value = '';
           socket.emit('inputChange', { pageId, inputIndex, value: '' });
           const prev = allInputs[currentIndex - 1];
           if (prev) {
-            prev.focus();
+            // prev.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(prev);
+            range.collapse(false); // 끝으로 이동
+            sel.removeAllRanges();
+            sel.addRange(range);
+
             prev.classList.add('input-selected');
-            prev.select(); // 전체 선택
-            prev.value = '';
+            selectSpanText(prev);
+            // prev.select(); // 전체 선택
+            prev.textContent = '';
+            // prev.value = '';
             socket.emit('inputChange', { pageId, inputIndex, value: '' });
           }
         }
@@ -968,52 +914,124 @@
         // ✅ 좌우 화살표 이동 지원 (기존 적용 유지)
         if(e.key === 'ArrowLeft' && currentIndex > 0){
           e.preventDefault();
+          if(isComposing) return; 
           const prev = allInputs[currentIndex - 1];
-          prev.focus();
+          // prev.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(prev);
+          range.collapse(false); // 끝으로 이동
+          sel.removeAllRanges();
+          sel.addRange(range);
           prev.classList.add('input-selected');
         }
 
         if(e.key === 'ArrowRight' && currentIndex < allInputs.length - 1){
           e.preventDefault();
+          if(isComposing) return; 
           const next = allInputs[currentIndex + 1];
-          next.focus();
+          // next.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(next);
+          range.collapse(false); // 끝으로 이동
+          sel.removeAllRanges();
+          sel.addRange(range);  
           next.classList.add('input-selected');
         }
 
         // 🔹 ArrowUp → 위로 이동
-        if(e.key === 'ArrowUp'){
+        if (e.key === 'ArrowUp') {
           e.preventDefault();
-          const up = allInputs[currentIndex - 15];
-          if(up){
-            up.focus();
-            up.classList.add('input-selected');
+          if (isComposing) return;
+
+          // ✅ page 구간에 따라 이동 폭 결정
+          const step = (pageId >= 1 && pageId <= 16) || (pageId >= 49 && pageId <= 64)
+            ? 10
+            : 15;
+
+          const up = allInputs[currentIndex - step];
+
+          if (up) {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(up);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            up.classList.add("input-selected");
           }
         }
 
-        // 🔹 ArrowDown 또는 Enter → 아래로 이동
-        if(e.key === 'ArrowDown'){
+        // 🔹 ArrowDown → 아래로 이동
+        if (e.key === 'ArrowDown') {
           e.preventDefault();
-          const down = allInputs[currentIndex + 15];
-          if(down){
-            down.focus();
-            down.classList.add('input-selected');
+          if (isComposing) return;
+
+          // ✅ page 구간에 따라 이동 폭 결정
+          const step = (pageId >= 1 && pageId <= 16) || (pageId >= 49 && pageId <= 64)
+            ? 10
+            : 15;
+
+          const down = allInputs[currentIndex + step];
+
+          if (down) {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(down);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            down.classList.add("input-selected");
           }
         }
-        // if(e.key === 'ArrowDown' || e.key === 'Enter'){
+        // // 🔹 ArrowUp → 위로 이동
+        // if(e.key === 'ArrowUp'){
         //   e.preventDefault();
+        //   if(isComposing) return; 
+        //   const up = allInputs[currentIndex - 15];
+        //   if(up){
+        //     // up.focus();
+        //     const range = document.createRange();
+        //     const sel = window.getSelection();
+        //     range.selectNodeContents(up);
+        //     range.collapse(false); // 끝으로 이동
+        //     sel.removeAllRanges();
+        //     sel.addRange(range);  
+        //     up.classList.add('input-selected');
+        //   }
+        // }
+
+        // // 🔹 ArrowDown 또는 Enter → 아래로 이동
+        // if(e.key === 'ArrowDown'){
+        //   e.preventDefault();
+        //   if(isComposing) return; 
         //   const down = allInputs[currentIndex + 15];
         //   if(down){
-        //     down.focus();
+        //     // down.focus();
+        //     const range = document.createRange();
+        //     const sel = window.getSelection();
+        //     range.selectNodeContents(down);
+        //     range.collapse(false); // 끝으로 이동
+        //     sel.removeAllRanges();
+        //     sel.addRange(range);  
         //     down.classList.add('input-selected');
         //   }
         // }
+
 
         // ✅ Command(mac) / Ctrl(Windows) + ArrowUp / ArrowDown
         if ((e.metaKey || e.ctrlKey) && e.keyCode === 37) { // ArrowLeft
           e.preventDefault();
           const prev = allInputs[currentIndex - 180];
           if(prev){
-            prev.focus();
+            // prev.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(prev);
+            range.collapse(false); // 끝으로 이동
+            sel.removeAllRanges();
+            sel.addRange(range);
             prev.classList.add('input-selected');
             focusCameraOnInput(prev);
           }
@@ -1023,7 +1041,13 @@
           e.preventDefault();
           const next = allInputs[currentIndex + 180];
           if(next){
-            next.focus();
+            // next.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(next);
+            range.collapse(false); // 끝으로 이동
+            sel.removeAllRanges();
+            sel.addRange(range);
             next.classList.add('input-selected');
             focusCameraOnInput(next);
           }
@@ -1033,7 +1057,13 @@
           e.preventDefault();
           const up = allInputs[currentIndex - 2880];
           if(up){
-            up.focus();
+            // up.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(up);
+            range.collapse(false); // 끝으로 이동
+            sel.removeAllRanges();
+            sel.addRange(range);
             up.classList.add('input-selected');
             focusCameraOnInput(up);
           }
@@ -1043,7 +1073,13 @@
           e.preventDefault();
           const down = allInputs[currentIndex + 2880];
           if(down){
-            down.focus();
+            // down.focus();
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(down);
+            range.collapse(false); // 끝으로 이동
+            sel.removeAllRanges();
+            sel.addRange(range);
             down.classList.add('input-selected');
             focusCameraOnInput(down);
           }
@@ -1051,6 +1087,21 @@
 
       });
       
+    }
+
+    function moveToNextSpan(current) {
+      const idx = allInputs.indexOf(current);
+      if (idx >= 0 && idx < allInputs.length - 1) {
+        const next = allInputs[idx + 1];
+        // next.focus();
+        // 커서 위치 강제 조정
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(next);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
     }
 
     // function setupInput(input, pageId, inputIndex){
@@ -1063,6 +1114,8 @@
     //     input.value.trim()!=='' ? input.classList.add('input-texted') : input.classList.remove('input-texted');
     //   });
     // }
+
+
 
     // --- 요청 ---
     function requestAllPages(){
@@ -1078,7 +1131,7 @@
         const input=allInputs[globalIndex];
         if(!input) continue;
         const value=data['input'+i]||'';
-        input.value=value;
+        input.textContent=value;
         value.trim()!=='' ? input.classList.add('input-texted') : input.classList.remove('input-texted');
       }
     });
@@ -1088,10 +1141,58 @@
       const globalIndex=(pageId-1)*inputsCount + inputIndex;
       const input=allInputs[globalIndex];
       if(!input) return;
-      input.value=value||'';
+      input.textContent=value||'';
       if(value && value.trim()!=='') input.classList.add('input-texted');
       else input.classList.remove('input-texted');
     });
+
+
+    // --- 사운드 준비 ---
+    // const bgSound = new Audio('sound/bg_kakiking.mp3');
+    const bgSound = new Audio('sound/air1.mp3');
+    bgSound.loop = true;  // 루프 설정
+
+    const arrowSound = new Audio('sound/page4.mp3');
+    arrowSound.loop = false; // 루프 끄기
+
+    const typingSound = new Audio('sound/snap1.mp3');
+    typingSound.loop = false;  // 루프 끄기
+
+    const eraseSound = new Audio('sound/erase1.mp3'); 
+    eraseSound.loop = false; // 루프 끄기
+
+    let isBgPlaying = false;
+
+    // --- 키보드 입력 / 마우스 드래그 이벤트 ---
+    // function playBgSound() {
+    //   if (!isBgPlaying) {
+    //     bgSound.play().catch(err => console.log(err));
+    //     isBgPlaying = true;
+    //   }
+    // }
+
+    // 키보드 아무 키 누를 때
+    window.addEventListener('keydown', (e) => {
+      // 커맨드/컨트롤 + 화살표키 조합 시 아무 소리도 없음
+      if ((e.metaKey || e.ctrlKey) && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+        arrowSound.currentTime = 0;
+        arrowSound.play().catch(err => console.log(err));
+      }
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+        arrowSound.currentTime = 0;
+        arrowSound.play().catch(err => console.log(err));
+      } else if (e.key === 'Backspace') {
+        eraseSound.currentTime = 0;
+        eraseSound.play().catch(err => console.log(err));
+      } else {
+        typingSound.currentTime = 0;
+        typingSound.play().catch(err => console.log(err));
+
+        // 필요하면 배경음도 재생
+        // playBgSound();
+      }
+    });
+
 
 
     // --- Animate ---

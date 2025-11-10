@@ -1,0 +1,1028 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crisp Inputs in CSS3DRenderer</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #cssRenderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* --- plane-wrapper --- */
+  .plane-wrapper {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* --- input field --- */
+  .inputPlane {
+    width: 6px;
+    height: 9px;
+    padding: 0;
+    margin: 0;
+    font-size: 6px;
+    line-height: 9px;
+    text-align: center;
+    font-family: monospace;
+    border: none;
+    color: #fff;
+    background: transparent;
+    pointer-events: auto;
+    outline: none;
+
+    /* ✨ 핵심: 흐림 제거 */
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+    backface-visibility: hidden;
+  }
+
+  /* 포커스 시에도 blur 안 생김 */
+  .inputPlane:focus {
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+
+let scene, camera, webGLRenderer, cssRenderer, sphereGroup;
+let rotationX = 0, rotationY = 0;
+const speed = 0.02;
+const keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 0);
+
+  webGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(webGLRenderer.domElement);
+
+  cssRenderer = new CSS3DRenderer();
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.domElement.id = "cssRenderer";
+  document.body.appendChild(cssRenderer.domElement);
+
+  sphereGroup = new THREE.Group();
+  scene.add(sphereGroup);
+
+  const radius = 150;
+  const minPlaneSize = 80;
+  const latitudes = Math.ceil(Math.PI * radius / minPlaneSize);
+  const planeSize = Math.PI * radius / latitudes;
+
+  let inputCount = 1;
+
+  for (let i = 0; i <= latitudes; i++) {
+    const theta = i * Math.PI / latitudes;
+    const y = radius * Math.cos(theta);
+    const r = radius * Math.sin(theta);
+    const longitudes = r === 0 ? 1 : Math.ceil(2 * Math.PI * r / planeSize);
+
+    for (let j = 0; j < longitudes; j++) {
+      const phi = j * 2 * Math.PI / longitudes;
+      const x = r * Math.cos(phi);
+      const z = r * Math.sin(phi);
+
+      // WebGL 평면
+      const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
+      const material = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide});
+      // const material = new THREE.MeshBasicMaterial({ visible: false });
+      const plane = new THREE.Mesh(geometry, material);
+      plane.position.set(x, y, z);
+      plane.lookAt(0, 0, 0);
+      sphereGroup.add(plane);
+
+      const div = document.createElement('div');
+      div.className = 'plane-wrapper';
+      div.style.width = planeSize + 'px';
+      div.style.height = planeSize + 'px';
+
+      const inputsPerPlane = 120;
+      for (let k = 0; k < inputsPerPlane; k++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 1;
+        input.className = 'inputPlane';
+        input.id = 'input' + (inputCount++);
+        div.appendChild(input);
+        if (input.id === 'input1') setTimeout(() => input.focus(), 300);
+      }
+
+      const object = new CSS3DObject(div);
+      object.position.set(x, y, z);
+      object.lookAt(0, 0, 0);
+      sphereGroup.add(object);
+    }
+  }
+
+  window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+  window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (keys.ArrowUp) rotationX -= speed;
+  if (keys.ArrowDown) rotationX += speed;
+  if (keys.ArrowLeft) rotationY -= speed;
+  if (keys.ArrowRight) rotationY += speed;
+
+  sphereGroup.rotation.x = rotationX;
+  sphereGroup.rotation.y = rotationY;
+
+  webGLRenderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
+}
+</script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crisp Inputs in CSS3DRenderer</title>
+<!-- css -->
+<link rel="stylesheet" href="font.css">
+<style>
+  body {
+    margin: 0;
+    background: blue;
+    /* background-image: url("img/sky_1.jpg"); */
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #cssRenderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* --- plane-wrapper --- */
+  .plane-wrapper {
+    display: grid;
+    /* grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(12, 1fr); */
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    will-change: transform;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+
+    grid-auto-columns: 1fr; 
+    grid-auto-rows: 1fr; 
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; 
+    gap: 0px 0px; 
+    grid-template-areas: 
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."
+      ". . . . . . . . ."; 
+    /* background: red; */
+  }
+
+  /* --- input field --- */
+  .inputPlane {
+    width: 100%;
+    height: 100%;
+    /* width: 6px;
+    height: 9px; */
+    padding: 0;
+    margin: 0;
+    font-size: 11px;
+    line-height: 9px;
+    text-align: center;
+    font-family: FKGroteskMonoTrial-Regular;
+    text-transform: uppercase;
+    border: 1px solid white;
+    border: none;
+    color: gray;
+    background: transparent;
+    pointer-events: auto;
+    outline: none;
+
+    /* ✨ 핵심: 흐림 제거 */
+    -webkit-font-smoothing: none !important;
+    text-rendering: geometricPrecision;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+    backface-visibility: hidden;
+  }
+
+  /* 포커스 시에도 blur 안 생김 */
+  .inputPlane:focus {
+    background: transparent;
+    border: none;
+    outline: none;
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1.0001);
+  }
+
+  .input-texted {
+    position: relative;
+    /* animation: float 3s ease-in-out infinite; */
+    /* animation: float-3d 3s infinite ease-in-out alternate; */
+  }
+
+  @keyframes float {
+      0% {
+          transform: translateY(0);
+      }
+
+      50% {
+          transform: translateY(-20px);
+      }
+
+      100% {
+          transform: translateY(0);
+      }
+  }
+
+  @keyframes float-3d {
+    from {
+      transform: translateZ(0) rotateX(0deg); /* Starting position and rotation */
+    }
+    to {
+      transform: translateZ(20px) rotateX(10deg); /* Floating closer and tilting */
+    }
+  }
+
+
+  #bg-video {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
+  }
+</style>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+  <div style="position: fixed; top: 10px; left: 15px; width: 35%; z-index: 3;">
+    <!-- <h1>Air-Drop</h1> -->
+    <!-- <p>
+      The internet is the air that grounds us. This shared, vast universe allows us to join, engage, and connect with each other. Here, in Air–Drop, you are invited to leave a message or drawing as a gift for an unknown recipient. What you drop will drift through this space, float in the air, and eventually land in someone’s hands. Let your heart travel around the world! Though we never cross paths, we feel each other through your drops, breathing in the same air.
+    </p> -->
+  </div>
+
+<script type="module">
+  const socket = io();
+  
+  import * as THREE from 'three';
+  import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+  import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+  import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+
+  const loader = new FontLoader();
+  let loadedFont = null;
+  loader.load('font/FK Grotesk SemiMono Trial_Regular.json', (font) => {
+    loadedFont = font;
+    init();  // 폰트가 준비된 후 초기화 실행
+    animate();
+  });
+  // let loadedFont = null;
+  // loader.load('font/ReadyActiveTest-Light.json', (font) => {
+  //   loadedFont = font;
+  //   init();  // 폰트가 준비된 후 초기화 실행
+  //   animate();
+  // });
+  // let loadedFont = null;
+  // loader.load('font/Menlo_Regular.json', (font) => {
+  //   loadedFont = font;
+  //   init();  // 폰트가 준비된 후 초기화 실행
+  //   animate();
+  // });
+
+
+  const gltfLoader = new GLTFLoader();
+  let cloudNorth, cloudSouth;
+  let scene, camera, webGLRenderer, cssRenderer, sphereGroup, backgroundMesh, texture, ctx, canvas;
+  let rotationX=0, rotationY=0, speed=0.02;
+  const keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false };
+  let allInputs = []; // ✅ 모든 input 추적용 배열
+
+  // 🌞 시간대별 그라디언트 팔레트
+  const gradients = {
+    dawn:   ['#1a237e', '#3949ab', '#81d4fa'], // 새벽
+    morning:['#81d4fa', '#fff176', '#ffb74d'], // 아침
+    // noon:   ['#64b5f6', '#4dd0e1', '#81c784'], // 점심
+    noon:['#81d4fa', '#fff176', '#ffb74d'], // 점심
+    evening:['#ff8a65', '#f06292', '#ba68c8'], // 저녁
+    night:  ['#00afff', '#4ADBFF', '#ffffff']  // 밤
+    // night:  ['#00afff', '#4ADBFF', '#ffffff']  // 밤
+    // night:  ['#0d47a1', '#1a237e', '#000022']  // 밤
+  };
+
+  // 🕒 전역 변수는 반드시 updateGradient보다 먼저 선언
+  let currentPalette = gradients[getTimeOfDay()];
+  let targetPalette = currentPalette.slice(); // 복사
+  let lastUpdate = 0;
+
+
+  // init();
+  // animate();
+
+  // ⏰ 현재 시간대에 맞는 그라디언트 선택
+  function getTimeOfDay() {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 8)   return 'dawn';     // 4~7시: 새벽
+    if (hour >= 8 && hour < 12)  return 'morning';  // 8~11시: 아침
+    if (hour >= 12 && hour < 17) return 'noon';     // 12~16시: 점심
+    if (hour >= 17 && hour < 21) return 'evening';  // 17~20시: 저녁
+    return 'night';                                 // 21~3시: 밤
+  }
+
+  function hexToRgb(hex) {
+    if (hex.startsWith('rgb')) {
+      // 이미 rgb 문자열일 경우 그대로 파싱
+      const [r, g, b] = hex.match(/\d+/g).map(Number);
+      return { r, g, b };
+    }
+
+    // hex → rgb 변환
+    const bigint = parseInt(hex.replace('#',''), 16);
+    return {
+      r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255
+    };
+  }
+
+  function blendColors(c1, c2, t) {
+    const a = hexToRgb(c1);
+    const b = hexToRgb(c2);
+
+    const r = Math.round(a.r + (b.r - a.r) * t);
+    const g = Math.round(a.g + (b.g - a.g) * t);
+    const b2 = Math.round(a.b + (b.b - a.b) * t);
+
+    return `rgb(${r},${g},${b2})`;
+  }
+
+  // 🎨 배경 그라디언트 업데이트
+  function updateGradient(time) {
+    const now = getTimeOfDay();
+
+    // 10초마다 시간대 체크
+    if (time - lastUpdate > 10000) {
+      const newPalette = gradients[now];
+      if (newPalette !== targetPalette) {
+        targetPalette = newPalette;
+      }
+      lastUpdate = time;
+    }
+
+    // 색상 보간 (hex → rgb → 보간 후 rgb)
+    for (let i = 0; i < 3; i++) {
+      currentPalette[i] = blendColors(currentPalette[i], targetPalette[i], 0.02);
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+    gradient.addColorStop(0, currentPalette[0]);
+    gradient.addColorStop(0.5, currentPalette[1]);
+    gradient.addColorStop(1, currentPalette[2]);
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    texture.needsUpdate = true;
+  }
+
+
+// ----------------------
+// 초기화 함수
+function init() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 0);
+
+  webGLRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(webGLRenderer.domElement);
+
+  cssRenderer = new CSS3DRenderer();
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.domElement.id = "cssRenderer";
+  document.body.appendChild(cssRenderer.domElement);
+
+  sphereGroup = new THREE.Group();
+  scene.add(sphereGroup);
+
+
+  // 🌄 배경용 Canvas
+  canvas = document.createElement('canvas');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr); // 캔버스 전체 스케일 보정 (고해상도에서도 깨끗하게)
+
+  texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;  // 픽셀화 방지
+  texture.magFilter = THREE.LinearFilter;  // 픽셀화 방지
+  texture.generateMipmaps = false;         // mipmap 비활성화 (실시간 업데이트 시 필수)
+  texture.needsUpdate = true;
+
+  // 🌌 배경 구 생성
+  const radius = 500;
+  const geometry = new THREE.SphereGeometry(radius, 64, 64);
+  const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+  backgroundMesh = new THREE.Mesh(geometry, material);
+  sphereGroup.add(backgroundMesh);
+
+  // -----------------------------
+  // 클라우드 로딩 (북극)
+  //   gltfLoader.load('img/cloud.glb', (gltf) => {
+  //   cloudNorth = gltf.scene;
+  //   cloudNorth.traverse((child) => {
+  //     if (child.isMesh) {
+  //       child.material = new THREE.MeshBasicMaterial({
+  //         map: child.material.map,
+  //         side: THREE.DoubleSide,
+  //         transparent: true,
+  //         opacity: 0.8,
+  //         depthWrite: false,
+  //         alphaTest: 0.5
+  //       });
+  //     }
+  //   });
+  //   cloudNorth.scale.set(100, 100, 100);
+  //   cloudNorth.position.set(0, radius, 0);
+  //   sphereGroup.add(cloudNorth);
+  // });
+
+
+  // 클라우드 로딩 (남극)
+  gltfLoader.load('img/cloud.glb', (gltf) => {
+    cloudSouth = gltf.scene;
+    cloudSouth.traverse((child) => {
+      if (child.isMesh) {
+        child.material = new THREE.MeshBasicMaterial({
+          map: child.material.map,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.8,
+          depthWrite: false,
+          alphaTest: 0.5
+        });
+      }
+    });
+    cloudSouth.scale.set(50, 50, 50);
+    cloudSouth.position.set(0, -radius, 0);
+    sphereGroup.add(cloudSouth);
+  });
+
+
+
+
+  // 🌈----------------------------
+  // 격자 생성
+  const latLines = 6, lonLines=16, lineThickness=1;
+  // 격자 포인트 저장
+  const verticalLines=[], horizontalLines=[];
+
+  const gridColor = 0xffffff;
+
+  // Tube 생성용 함수
+  function createTubeFromPoints(points, radius = 1, radialSegments = 6) {
+    class CustomCurve extends THREE.Curve {
+      constructor(points){super();this.points=points;}
+      getPoint(t) {
+        const idx = t * (this.points.length - 1);
+        const i = Math.floor(idx);
+        const frac = idx - i;
+        if (i >= this.points.length - 1) return this.points[this.points.length - 1];
+        return new THREE.Vector3().lerpVectors(this.points[i], this.points[i + 1], frac);
+      }
+    }
+
+    const curve = new CustomCurve(points);
+    const geometry = new THREE.TubeGeometry(curve, points.length * 2, radius, radialSegments, false);
+    const material = new THREE.MeshBasicMaterial({ color: gridColor });
+    return new THREE.Mesh(geometry, material);
+  }
+
+  // 세로선
+  for(let i=0;i<=lonLines;i++){
+    const phi = (i/lonLines)*2*Math.PI;
+    const points=[];
+    for(let j=0;j<=latLines;j++){
+      const theta=(j/latLines)*Math.PI;
+      const x=500*Math.sin(theta)*Math.cos(phi);
+      const y=500*Math.cos(theta);
+      const z=500*Math.sin(theta)*Math.sin(phi);
+      points.push(new THREE.Vector3(x,y,z));
+    }
+    sphereGroup.add(createTubeFromPoints(points, lineThickness));
+  }
+
+  // 가로선
+  for(let j=0;j<=latLines;j++){
+    const theta=(j/latLines)*Math.PI;
+    const points=[];
+    for(let i=0;i<=lonLines;i++){
+      const phi=(i/lonLines)*2*Math.PI;
+      const x=500*Math.sin(theta)*Math.cos(phi);
+      const y=500*Math.cos(theta);
+      const z=500*Math.sin(theta)*Math.sin(phi);
+      points.push(new THREE.Vector3(x,y,z));
+    }
+    sphereGroup.add(createTubeFromPoints(points, lineThickness));
+  }
+
+
+  
+
+  // TubeGeometry 함수
+  function createTubeFromPoints(points, radius = 1, radialSegments = 6) {
+    class CustomCurve extends THREE.Curve {
+      constructor(points) { super(); this.points = points; }
+      getPoint(t) {
+        const idx = t*(this.points.length-1);
+        const i = Math.floor(idx);
+        const frac = idx-i;
+        if(i>=this.points.length-1) return this.points[this.points.length-1];
+        return new THREE.Vector3().lerpVectors(this.points[i], this.points[i+1], frac);
+      }
+    }
+    const curve = new CustomCurve(points);
+    const geometry = new THREE.TubeGeometry(curve, points.length*2, radius, radialSegments, false);
+    const material = new THREE.MeshBasicMaterial({ color:0xffffff });
+    const mesh = new THREE.Mesh(geometry, material);
+    return mesh;
+  }
+
+
+  for(let i=0;i<=lonLines;i++){
+    const phi = (i/lonLines)*2*Math.PI;
+    const points = [];
+    for(let j=0;j<=latLines;j++){
+      const theta = (j/latLines)*Math.PI;
+      const x = radius*Math.sin(theta)*Math.cos(phi);
+      const y = radius*Math.cos(theta);
+      const z = radius*Math.sin(theta)*Math.sin(phi);
+      points.push(new THREE.Vector3(x,y,z));
+    }
+    verticalLines.push(points);
+    sphereGroup.add(createTubeFromPoints(points,lineThickness));
+  }
+
+  for(let j=0;j<=latLines;j++){
+    const theta = (j/latLines)*Math.PI;
+    const points = [];
+    for(let i=0;i<=lonLines;i++){
+      const phi = (i/lonLines)*2*Math.PI;
+      const x = radius*Math.sin(theta)*Math.cos(phi);
+      const y = radius*Math.cos(theta);
+      const z = radius*Math.sin(theta)*Math.sin(phi);
+      points.push(new THREE.Vector3(x,y,z));
+    }
+    horizontalLines.push(points);
+    sphereGroup.add(createTubeFromPoints(points,lineThickness));
+  }
+
+  // ---------------------------
+  // 격자 중심에 WebGL Plane + CSS3DObject 생성
+  const planeWidths = [100, 100, 150, 150, 100, 100];   // 각 층(layer)별 가로 크기
+  const planeHeights = [100, 240, 240, 240, 240, 100];   // 각 층별 세로 크기
+  let inputCount=1, faceCount=1;
+
+  for(let j=0;j<latLines;j++){
+    // ✅ 첫 번째 층과 마지막 층은 plane, text 모두 생략
+    if (j === 0 || j === latLines - 1) continue;
+    const planeWidth = planeWidths[j % planeWidths.length];   // 층 index에 맞게 반복 적용 가능
+    const planeHeight = planeHeights[j % planeHeights.length];
+
+    for(let i=0;i<lonLines;i++){
+      // 사각형 4개 점
+      const p00 = verticalLines[i][j];
+      const p01 = verticalLines[i][j+1];
+      const p10 = verticalLines[i+1][j];
+      const p11 = verticalLines[i+1][j+1];
+
+      // 중심 계산
+      let center;
+      if (j === 0) {
+        // 첫 번째 줄: 맨 아래 점 기준
+        center = new THREE.Vector3().addVectors(p00,p01).add(p10).add(p11).multiplyScalar(0.5);
+      } else if (j === latLines - 1) {
+        // 마지막 줄: 맨 위 점 기준
+        center = new THREE.Vector3().addVectors(p01, p11).multiplyScalar(0.5);
+      } else {
+        // 중간 줄: 기존 평균
+        center = new THREE.Vector3().addVectors(p00,p01).add(p10).add(p11).multiplyScalar(0.25);
+      }
+
+
+      // WebGL Plane
+      const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+      const material = new THREE.MeshBasicMaterial({ visible:false });
+      const plane = new THREE.Mesh(geometry, material);
+      plane.position.copy(center);
+      plane.lookAt(0,0,0);
+      sphereGroup.add(plane);
+
+      // ✅ 번호 텍스트 추가
+      if (loadedFont) {
+        const textGeo = new TextGeometry(faceCount.toString(), {
+          font: loadedFont,
+          size: 11,
+          // size: 40,
+          height: 0.3,
+          curveSegments: 4,
+          bevelEnabled: false
+        });
+
+        // ✅ 텍스트 중심 보정
+        textGeo.computeBoundingBox();
+        const bbox = textGeo.boundingBox;
+        const textCenter = new THREE.Vector3(
+          (bbox.max.x + bbox.min.x) / 2,
+          // (bbox.max.y + bbox.min.y) * 4,
+          (bbox.max.y + bbox.min.y) * 10,
+          (bbox.max.z + bbox.min.z) / 2
+        );
+        textGeo.translate(-textCenter.x, -textCenter.y, -textCenter.z);
+
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const textMesh = new THREE.Mesh(textGeo, textMaterial);
+
+        // ✅ plane의 중심에 정확히 배치
+        textMesh.position.copy(center);
+
+        // ✅ 텍스트가 항상 카메라를 향하게
+        textMesh.lookAt(camera.position);
+
+        sphereGroup.add(textMesh);
+      }
+
+
+      faceCount++;
+
+
+      // CSS3D Plane
+      const div = document.createElement('div');
+      div.className='plane-wrapper';
+      div.style.width = planeWidth+'px';
+      div.style.height = planeHeight+'px';
+
+      const inputsPerPlane = 180;
+      for(let k=0;k<inputsPerPlane;k++){
+        const input = document.createElement('input');
+        input.type='text';
+        input.maxLength=1;
+        input.className='inputPlane';
+        input.id='input'+(inputCount++);
+        div.appendChild(input);
+        allInputs.push(input);
+
+
+        // input.addEventListener('input', () => {
+        //   const idx = allInputs.indexOf(input);
+        //   const planeId = Math.floor(idx / 180);
+        //   const inputIndex = idx % 180;
+        //   const value = input.value;
+
+        //   console.log({ planeId, inputIndex, value }); // ← 서버 없이 테스트 가능
+
+        //   if (value.trim() !== '') {
+        //     input.classList.add('input-texted');
+        //   } else {
+        //     input.classList.remove('input-texted');
+        //   }
+        // });
+      // ✅ 입력 이벤트 등록 (생성과 동시에)
+      input.addEventListener('input', () => {
+        const idx = allInputs.indexOf(input);
+        const planeId = Math.floor(idx / 180);
+        const inputIndex = idx % 180;
+        const value = input.value;
+
+        // Socket.io 서버로 전송
+        socket.emit('inputChange', { planeId, inputIndex, value });
+
+        // 글자 처리 UI
+        if (value.trim() !== '') {
+          input.classList.add('input-texted');
+        } else {
+          input.classList.remove('input-texted');
+        }
+      });
+
+        // 입력 이벤트 (사용자가 글자를 입력할 때)\
+        // input.addEventListener('input', () => {
+        //   // 현재 input 선택
+        //   input.select();
+
+        //   // 글자 상태 반영
+        //   if (input.value.trim() !== '') {
+        //     input.classList.add('input-texted');
+        //     // 다음 input으로 자동 포커스
+        //     const nextInput = document.getElementById('input' + (parseInt(input.id.replace('input','')) + 1));
+        //     if (nextInput) nextInput.focus();
+        //   } else {
+        //     input.classList.remove('input-texted');
+        //   }
+        // });
+
+let isComposing = false;
+
+input.addEventListener('compositionstart', () => {
+  isComposing = true;
+});
+
+input.addEventListener('compositionend', () => {
+  isComposing = false;
+
+  // 글자 완료 처리: 현재 input에 입력 확정
+  input.classList.remove('focused');
+  input.classList.add('input-texted');
+
+  // 다음 input으로 포커스 이동
+  const nextIndex = parseInt(input.id.replace('input', '')) + 1;
+  const nextInput = document.getElementById('input' + nextIndex);
+
+  if (nextInput) {
+    // 다음 input에서 IME 조합이 시작되도록 약간 딜레이
+    setTimeout(() => {
+      nextInput.focus();
+      nextInput.select();
+    }, 0);
+  }
+});
+
+// 일반 input 이벤트 처리 (영문 등)
+input.addEventListener('input', (e) => {
+  if (!isComposing && input.value.trim() !== '') {
+    input.classList.remove('focused');
+    input.classList.add('input-texted');
+
+    const nextIndex = parseInt(input.id.replace('input', '')) + 1;
+    const nextInput = document.getElementById('input' + nextIndex);
+
+    if (nextInput) {
+      setTimeout(() => {
+        nextInput.focus();
+        nextInput.select();
+      }, 0);
+    }
+  } else if (input.value.trim() === '') {
+    input.classList.remove('input-texted');
+  }
+});
+
+
+
+
+
+
+
+
+        // 포커스 이벤트
+        input.addEventListener('focus', () => {
+          input.classList.remove('input-texted');
+          input.classList.add('focused');
+        });
+
+        // 블러 이벤트 (포커스 해제 시)
+        input.addEventListener('blur', () => {
+          input.classList.remove('focused');
+          if (input.value.trim() !== '') {
+            input.classList.add('input-texted');
+          }
+        });
+
+        // 입력 이벤트 (사용자가 글자를 입력할 때)
+        input.addEventListener('keydown',(e)=>{
+          if(e.key==='Backspace' && input.value===''){
+            const prevIndex = allInputs.indexOf(input)-1;
+            if(prevIndex>=0){
+              const prevInput = allInputs[prevIndex];
+              prevInput.focus();
+              prevInput.value='';
+              e.preventDefault();
+            }
+          }
+        });
+        // input.addEventListener('input', () => {
+        //   if (input.value.trim() !== '') {
+        //     input.classList.remove('focused');
+        //     input.classList.add('input-texted');
+        //   } else {
+        //     input.classList.remove('input-texted');
+        //   }
+        // });
+
+        div.appendChild(input);
+      }
+
+
+      const object = new CSS3DObject(div);
+      object.position.copy(center);
+      object.lookAt(0,0,0);
+      sphereGroup.add(object);
+    }
+  }
+
+  // window.addEventListener('keydown', e=>{ if(keys.hasOwnProperty(e.key)) keys[e.key]=true; });
+  // window.addEventListener('keyup', e=>{ if(keys.hasOwnProperty(e.key)) keys[e.key]=false; });
+    // ✅ 방향키 이동 로직
+  window.addEventListener('keydown', (e) => {
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+
+    const currentInput = document.activeElement;
+    const currentIndex = allInputs.indexOf(currentInput);
+
+    if (e.key === 'ArrowRight') {
+      rotationY += speed; // 회전
+      if (currentIndex >= 0 && currentIndex < allInputs.length - 1) {
+        e.preventDefault();
+        allInputs[currentIndex + 1].focus();
+      }
+    } else if (e.key === 'ArrowLeft') {
+      rotationY -= speed; // 회전
+      if (currentIndex > 0) {
+        e.preventDefault();
+        allInputs[currentIndex - 1].focus();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+  });
+
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+
+// ---------------------------
+// 모든 plane JSON 불러오기
+function loadAllPlanes(){
+  const totalPlanes = Math.ceil(allInputs.length/180);
+  for(let planeId=0; planeId<totalPlanes; planeId++){
+    fetch(`/plane_${planeId}.json`)
+      .then(res=>res.json())
+      .then(data=>{
+        data.forEach((value,inputIndex)=>{
+          const globalIndex = planeId*180 + inputIndex;
+          const targetInput = allInputs[globalIndex];
+          if(targetInput){
+            targetInput.value = value || '';
+            if(value && value.trim()!=='') targetInput.classList.add('input-texted');
+          }
+        });
+      }).catch(err=>{
+        console.warn(`Plane ${planeId} JSON not found.`);
+      });
+  }
+}
+
+// ---------------------------
+// 서버에서 실시간 업데이트 받기
+socket.on('updateInput', ({planeId,inputIndex,value})=>{
+  const globalIndex = planeId*180 + inputIndex;
+  const targetInput = allInputs[globalIndex];
+  if(!targetInput) return;
+  targetInput.value = value || '';
+  if(value && value.trim()!=='') targetInput.classList.add('input-texted');
+  else targetInput.classList.remove('input-texted');
+});
+
+
+// ---------------------------
+// 제한값 정의
+const minRotationX = -Math.PI / 2; // -90도
+const maxRotationX = Math.PI / 2;  // +90도
+
+function animate(time = 0) {
+  requestAnimationFrame(animate);
+
+  // 키 입력에 따라 회전
+  if (keys.ArrowUp) rotationX -= speed;
+  if (keys.ArrowDown) rotationX += speed;
+  if (keys.ArrowLeft) rotationY -= speed;
+  if (keys.ArrowRight) rotationY += speed;
+
+  // 회전 제한 적용 (X축만)
+  rotationX = Math.max(minRotationX, Math.min(maxRotationX, rotationX));
+
+  // 구 전체 회전
+  sphereGroup.rotation.x = rotationX;
+  sphereGroup.rotation.y = rotationY;
+
+  // 북극/남극 구름 회전
+  if (cloudNorth) cloudNorth.rotation.y += 0.001;  // 시계 방향
+  if (cloudSouth) cloudSouth.rotation.y -= 0.001;  // 반시계 방향
+
+  // 배경 그라디언트 업데이트
+  updateGradient(time);
+
+  // 렌더링
+  webGLRenderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
+}
+</script>
+
+
+</body>
+</html>

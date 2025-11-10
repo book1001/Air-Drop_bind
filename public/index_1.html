@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sphere — grouped input panels</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    html,body { height:100%; margin:0; background:#000; overflow:hidden; }
+    #container { position:relative; width:100%; height:100%; touch-action:none; }
+    canvas { display:block; }
+    .hint {
+      position:absolute; left:12px; top:12px;
+      color:#fff; font-family:sans-serif; font-size:14px;
+      background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:6px; z-index:10;
+    }
+
+    .input-group {
+      position: absolute;
+      display: grid;
+      grid-template-columns: repeat(10, 16px);
+      grid-auto-rows: 28px;
+      gap: 2px;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+    }
+
+    .sphere-input {
+      width: 16px;
+      height: 28px;
+      line-height: 28px;
+      padding: 0;
+      margin: 0;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.95);
+      color: #000;
+      font-size: 14px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div class="hint">
+      ⬆⬇⬅➡ rotate &nbsp;|&nbsp; ⌘/Ctrl + ⬆ zoom in, ⌘/Ctrl + ⬇ zoom out
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+  <script>
+  (function() {
+    const container = document.getElementById('container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 4000);
+    camera.position.set(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // background sphere
+    const sphereRadius = 600;
+    const tex = new THREE.TextureLoader().load('https://threejs.org/examples/textures/uv_grid_opengl.jpg');
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(sphereRadius, 64, 64),
+      new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide })
+    );
+    scene.add(sphere);
+
+    // controls
+    const state = { left:false, right:false, up:false, down:false };
+    const ROT_SPEED = 0.9;
+    let targetFov = camera.fov;
+    const ZOOM_STEP = 5, ZOOM_MIN = 20, ZOOM_MAX = 120, ZOOM_SMOOTHNESS = 0.08;
+
+    window.addEventListener('keydown', (e)=>{
+      const cmd = e.metaKey || e.ctrlKey;
+      if (cmd && e.key === "ArrowUp") { targetFov = Math.max(ZOOM_MIN, targetFov - ZOOM_STEP); e.preventDefault(); return; }
+      if (cmd && e.key === "ArrowDown") { targetFov = Math.min(ZOOM_MAX, targetFov + ZOOM_STEP); e.preventDefault(); return; }
+      if (e.key === "ArrowLeft")  { state.left = true; e.preventDefault(); }
+      if (e.key === "ArrowRight") { state.right = true; e.preventDefault(); }
+      if (e.key === "ArrowUp")    { state.up = true; e.preventDefault(); }
+      if (e.key === "ArrowDown")  { state.down = true; e.preventDefault(); }
+    }, {passive:false});
+
+    window.addEventListener('keyup', (e)=>{
+      if (e.key === "ArrowLeft")  state.left = false;
+      if (e.key === "ArrowRight") state.right = false;
+      if (e.key === "ArrowUp")    state.up = false;
+      if (e.key === "ArrowDown")  state.down = false;
+    });
+
+    // fibonacci sphere positions for group divs
+    const NUM_INPUTS = 4200;
+    const GROUP_SIZE = 50;
+    const NUM_GROUPS = Math.ceil(NUM_INPUTS / GROUP_SIZE);
+
+    function generateFibonacciPoints(n, radius) {
+      const pts = [];
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      for (let i = 0; i < n; i++) {
+        const y = 1 - (i / (n - 1)) * 2;
+        const r = Math.sqrt(1 - y * y);
+        const theta = golden * i;
+        const x = Math.cos(theta) * r;
+        const z = Math.sin(theta) * r;
+        pts.push(new THREE.Vector3(x * radius, y * radius, z * radius));
+      }
+      return pts;
+    }
+
+    const groupPositions = generateFibonacciPoints(NUM_GROUPS, sphereRadius - 0.5);
+
+    // create group divs
+    const groups = [];
+    let inputCounter = 1;
+    for (let g = 0; g < NUM_GROUPS; g++) {
+      const div = document.createElement('div');
+      div.className = 'input-group';
+      for (let j = 0; j < GROUP_SIZE && inputCounter <= NUM_INPUTS; j++, inputCounter++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `input${inputCounter}`;
+        input.maxLength = 1;
+        input.className = 'sphere-input';
+        div.appendChild(input);
+      }
+      container.appendChild(div);
+      groups.push(div);
+    }
+
+    // resize
+    window.addEventListener('resize', ()=>{
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+
+    const worldPos = new THREE.Vector3();
+    const camSpace = new THREE.Vector3();
+
+    function updateGroupPositions() {
+      sphere.updateMatrixWorld();
+      camera.updateMatrixWorld();
+      const w = renderer.domElement.clientWidth;
+      const h = renderer.domElement.clientHeight;
+
+      for (let i = 0; i < NUM_GROUPS; i++) {
+        worldPos.copy(groupPositions[i]);
+        sphere.localToWorld(worldPos);
+        camSpace.copy(worldPos).applyMatrix4(camera.matrixWorldInverse);
+
+        const el = groups[i];
+        if (camSpace.z >= 0) {
+          el.style.display = 'none';
+          continue;
+        }
+
+        const ndc = worldPos.clone().project(camera);
+        const x = (ndc.x + 1) / 2 * w;
+        const y = (1 - ndc.y) / 2 * h;
+        const z = -camSpace.z;
+        const scale = THREE.MathUtils.clamp(1.0 - (z - 100) / 3000, 0.5, 1.0);
+        el.style.display = '';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        el.style.opacity = `${THREE.MathUtils.clamp(1.0 - (z - 100) / 2000, 0.15, 1.0)}`;
+      }
+    }
+
+    let last = performance.now();
+    function animate(now) {
+      const dt = (now - last)/1000; last = now;
+      let yaw=0, pitch=0;
+      if (state.left) yaw += ROT_SPEED*dt;
+      if (state.right) yaw -= ROT_SPEED*dt;
+      if (state.up) pitch += ROT_SPEED*dt;
+      if (state.down) pitch -= ROT_SPEED*dt;
+      sphere.rotateX(pitch);
+      sphere.rotateY(yaw);
+
+      camera.fov += (targetFov - camera.fov) * ZOOM_SMOOTHNESS;
+      camera.updateProjectionMatrix();
+
+      updateGroupPositions();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+  </script>
+</body>
+</html>

@@ -45,14 +45,12 @@
   font-family: "Noto Sans KR", sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
-  font-style: normal;
 }
 
 :lang(zh) {
   font-family: "Noto Sans SC", sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
-  font-style: normal;
 }
 
 
@@ -94,6 +92,6 @@ html, body {
 h1 {
   margin-block-start: 0;
   margin-block-end: 0.67em;
-  font-family: 'ReadyActive-light';
+  font-family: 'ReadyActive-light', sans-serif;
   font-size: 92px;
 }
