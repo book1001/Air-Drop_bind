@@ -349,29 +349,24 @@ swipeSound.volume = 1.0; // 필요하면 조절 가능 (0.0 ~ 1.0)
 // Mobile Swipe Navigation
 // =========================
 let touchStartX = 0;
-let touchEndX = 0;
 const swipeThreshold = 50; // 스와이프 최소 거리(px)
 
 document.addEventListener("touchstart", (e) => {
   touchStartX = e.changedTouches[0].screenX;
 }, { passive: true });
 
-document.addEventListener("touchmove", (e) => {
-  touchEndX = e.changedTouches[0].screenX;
-}, { passive: true });
-
-document.addEventListener("touchend", () => {
+document.addEventListener("touchend", (e) => {
+  const touchEndX = e.changedTouches[0].screenX;
   const distance = touchEndX - touchStartX;
 
-  // 오른쪽 ← 왼쪽 스와이프 (다음 페이지)
-  if (distance < -swipeThreshold) {
+  // 스와이프 최소 거리 이상일 때만 페이지 이동
+  if (distance <= -swipeThreshold) {
+    // 오른쪽 ← 왼쪽 스와이프 (다음 페이지)
     loadPage(currentPage + 1);
     swipeSound.currentTime = 0;
     swipeSound.play();
-  }
-
-  // 왼쪽 → 오른쪽 스와이프 (이전 페이지)
-  if (distance > swipeThreshold) {
+  } else if (distance >= swipeThreshold) {
+    // 왼쪽 → 오른쪽 스와이프 (이전 페이지)
     loadPage(currentPage - 1);
     swipeSound.currentTime = 0;
     swipeSound.play();
@@ -382,17 +377,22 @@ document.addEventListener("touchend", () => {
 let swipeEnabled = false;
 
 function enableSwipe() {
-  if (swipeEnabled) return;     // 중복 실행 방지
+  if (swipeEnabled) return;     // 이미 실행됐으면 아무 동작 안함
   swipeEnabled = true;
 
   const soundBtn = document.getElementById("soundOn");
   soundBtn.style.display = "none";   // 버튼 숨기기
+
+  // 클릭/터치 이벤트 제거
+  soundBtn.removeEventListener("click", enableSwipe);
+  soundBtn.removeEventListener("touchstart", enableSwipe);
+
+  // 페이지 전환 사운드 재생
   swipeSound.currentTime = 0;
   swipeSound.play();
 }
 
 const soundBtn = document.getElementById("soundOn");
-
 soundBtn.addEventListener("click", enableSwipe);
 soundBtn.addEventListener("touchstart", enableSwipe);
 
