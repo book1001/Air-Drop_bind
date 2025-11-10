@@ -31,6 +31,7 @@
 <!-- Book -->
 <!-- ========================================================== -->
 <div class="book" id="currentPage">
+  <button id="soundOn"></button>
   <div id="pages-scale">
     <div id="pages" class="variBtn">
 
@@ -334,11 +335,14 @@ document.getElementById("title").addEventListener("click", () => {
 // 초기 페이지
 loadPage(0);
 
+
 // =========================
 // Page Turn Sound
 // =========================
 const swipeSound = new Audio("sound/page4.mp3");
 swipeSound.volume = 1.0; // 필요하면 조절 가능 (0.0 ~ 1.0)
+
+
 
 
 // =========================
@@ -373,6 +377,24 @@ document.addEventListener("touchend", () => {
     swipeSound.play();
   }
 });
+
+// =========================
+let swipeEnabled = false;
+
+function enableSwipe() {
+  if (swipeEnabled) return;     // 중복 실행 방지
+  swipeEnabled = true;
+
+  const soundBtn = document.getElementById("soundOn");
+  soundBtn.style.display = "none";   // 버튼 숨기기
+  swipeSound.currentTime = 0;
+  swipeSound.play();
+}
+
+const soundBtn = document.getElementById("soundOn");
+
+soundBtn.addEventListener("click", enableSwipe);
+soundBtn.addEventListener("touchstart", enableSwipe);
 
 </script>
 
