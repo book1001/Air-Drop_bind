@@ -35,6 +35,16 @@
 }
 
 @font-face {
+  font-family: 'NotoSansKR';
+  src: url('./font/NotoSansKR-VariableFont_wght.ttf') format('truetype'); 
+}
+
+@font-face {
+  font-family: 'NotoSansSC';
+  src: url('./font/NotoSansSC-VariableFont_wght.ttf') format('truetype'); 
+}
+
+@font-face {
   font-family: 'AppleColorEmoji';
   src: url('./font/AppleColorEmoji.ttc') format('truetype'); 
   font-weight: normal;
@@ -42,13 +52,13 @@
 }
 
 :lang(ko) {
-  font-family: "Noto Sans KR", sans-serif;
+  font-family: "NotoSansKR", sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
 }
 
 :lang(zh) {
-  font-family: "Noto Sans SC", sans-serif;
+  font-family: "NotoSansSC", sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
 }
@@ -73,11 +83,6 @@
    background: #ffffff !important;
   /* color: #000000 !important;
   background: #ffffff !important; */
-}
-
-
-html, body {
-  font-family: 'FKGroteskMonoTrial-Regular', 'Noto Sans KR', 'Noto Sans SC', 'AppleColorEmoji', sans-serif;
 }
 
 .material-symbols-outlined {
