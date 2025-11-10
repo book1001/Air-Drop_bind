@@ -289,5 +289,5 @@ saveBtn.addEventListener("click", async () => {
   saveBtn.textContent = "Processing...";
   await savePDFwithCover();
   saveBtn.disabled = false;
-  saveBtn.textContent = "Save";
+  saveBtn.textContent = "Saved";
 });
