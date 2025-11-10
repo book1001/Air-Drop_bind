@@ -333,6 +333,47 @@ document.getElementById("title").addEventListener("click", () => {
 
 // 초기 페이지
 loadPage(0);
+
+// =========================
+// Page Turn Sound
+// =========================
+const swipeSound = new Audio("sound/page4.mp3");
+swipeSound.volume = 1.0; // 필요하면 조절 가능 (0.0 ~ 1.0)
+
+
+// =========================
+// Mobile Swipe Navigation
+// =========================
+let touchStartX = 0;
+let touchEndX = 0;
+const swipeThreshold = 50; // 스와이프 최소 거리(px)
+
+document.addEventListener("touchstart", (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener("touchmove", (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener("touchend", () => {
+  const distance = touchEndX - touchStartX;
+
+  // 오른쪽 ← 왼쪽 스와이프 (다음 페이지)
+  if (distance < -swipeThreshold) {
+    loadPage(currentPage + 1);
+    swipeSound.currentTime = 0;
+    swipeSound.play();
+  }
+
+  // 왼쪽 → 오른쪽 스와이프 (이전 페이지)
+  if (distance > swipeThreshold) {
+    loadPage(currentPage - 1);
+    swipeSound.currentTime = 0;
+    swipeSound.play();
+  }
+});
+
 </script>
 
 <script type="text/javascript" src="m_bg.js"></script>
