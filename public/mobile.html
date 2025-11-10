@@ -359,14 +359,18 @@ document.addEventListener("touchend", (e) => {
   const touchEndX = e.changedTouches[0].screenX;
   const distance = touchEndX - touchStartX;
 
+  // 터치한 요소가 #saveBtn이면 스와이프 무시
+  const target = e.target;
+  if (target.closest("#saveBtn") || target.closest("#soundOn")) {
+    return;
+  }
+
   // 스와이프 최소 거리 이상일 때만 페이지 이동
   if (distance <= -swipeThreshold) {
-    // 오른쪽 ← 왼쪽 스와이프 (다음 페이지)
     loadPage(currentPage + 1);
     swipeSound.currentTime = 0;
     swipeSound.play();
   } else if (distance >= swipeThreshold) {
-    // 왼쪽 → 오른쪽 스와이프 (이전 페이지)
     loadPage(currentPage - 1);
     swipeSound.currentTime = 0;
     swipeSound.play();
