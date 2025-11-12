@@ -1,3 +1,17 @@
+function getCurrentDateTimeString() {
+  const now = new Date();
+
+  const pad = (n) => n.toString().padStart(2, "0");
+
+  const month = pad(now.getMonth() + 1); // 월은 0~11
+  const day = pad(now.getDate());
+  const year = now.getFullYear();
+  const hours = pad(now.getHours());
+  const minutes = pad(now.getMinutes());
+
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
+}
+
 const saveBtn = document.getElementById("saveBtn");
 const totalBodyPages = 64; // JSON 페이지 수
 
@@ -13,7 +27,27 @@ Throughout the exhibition, not only those in Shenzhen but people from all corner
 `;
 
 const backCoverText = `
-Published by Halim Lee
+Published for the Open M Art Fair,
+abC Art Book in China
+
+With warm regards from Boston,
+Halim Lee
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+© ${getCurrentDateTimeString()}, all contributors
 `;
 
 // --------------------------
@@ -60,7 +94,7 @@ async function savePDFwithCover() {
   const cellHeight = 27;
   const startY = 55;
 
-  const marginX = 25;                                // ✅ 좌우 마진
+  const marginX = 0;                                // ✅ 좌우 마진
   const textWidth = pageWidth - marginX * 2;         // ✅ 사용 가능한 폭
 
   // --------------------------
@@ -233,42 +267,45 @@ async function savePDFwithCover() {
   // --------------------------
   // 3️⃣ 뒷표지
   // --------------------------
-  pdf.addPage();
-  const backImg = new Image();
-  backImg.src = "pdf/cover-02.png"; // 백커버 이미지 파일
-  await new Promise((resolve) => {
-    backImg.onload = () => {
-      pdf.addImage(backImg, "PNG", 0, 0, pageWidth, pageHeight); // 마진 없이 꽉 채움
-      resolve();
-    };
-  });
   // pdf.addPage();
-  // pdf.setFillColor("#00dcff");     // ✅ HEX 사용
-  // pdf.rect(0, 0, pageWidth, pageHeight, "F");
-
-  // const backLines = backCoverText.split("\n").filter(line => line.trim() !== "");
-  // let backY = startY;
-
-  // backLines.forEach((line) => {
-  //   const font = getFontForText(line);
-  //   pdf.setFont(font);
-
-  //   // const formatted = formatTextForPDF(line);
-
-  //   // ✅ 줄바꿈
-  //   const wrapped = pdf.splitTextToSize(line, textWidth);
-
-  //   // 좌측 정렬 + 블록 중앙 정렬
-  //   const blockWidth = pdf.getTextWidth(wrapped.join(" ")) || textWidth;
-  //   const startX = (pageWidth - blockWidth) / 2;
-
-  //   wrapped.forEach((wrapLine) => {
-  //     pdf.setFontSize(18);
-  //     pdf.text(wrapLine, startX, backY, { align: "left" });
-  //     // pdf.text(wrapLine, pageWidth / 2, backY, { align: "center" });
-  //     backY += 18;
-  //   });
+  // const backImg = new Image();
+  // backImg.src = "pdf/cover-02.png"; // 백커버 이미지 파일
+  // await new Promise((resolve) => {
+  //   backImg.onload = () => {
+  //     pdf.addImage(backImg, "PNG", 0, 0, pageWidth, pageHeight); // 마진 없이 꽉 채움
+  //     resolve();
+  //   };
   // });
+  pdf.addPage();
+  pdf.setFillColor("#000000");
+  pdf.setTextColor("#FFFFFF");    
+  pdf.rect(0, 0, pageWidth, pageHeight, "F");
+
+  const backLines = backCoverText.split("\n");
+  // const backLines = backCoverText.split("\n").filter(line => line.trim() !== "");
+  let backY = 18;
+  
+  backLines.forEach((line) => {
+    const font = getFontForText(line);
+    pdf.setFont(font);
+
+    // 빈 줄 처리
+    if (line.trim() === "") {
+      backY += 18; // 빈 줄이면 줄 간격만 추가
+      return;
+    }
+
+    const wrapped = pdf.splitTextToSize(line, textWidth);
+    const blockWidth = pdf.getTextWidth(wrapped.join(" ")) || textWidth;
+    const startX = (pageWidth - blockWidth) / 2;
+
+    wrapped.forEach((wrapLine) => {
+      pdf.setFontSize(16);
+      // pdf.text(wrapLine, startX, backY, { align: "left" });
+      pdf.text(wrapLine, pageWidth / 2, backY, { align: "center" });
+      backY += 18;
+    });
+  });
 
   // backLines.forEach((line, index) => {
   //   pdf.setFont(getFontForText(line));
