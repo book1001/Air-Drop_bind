@@ -13,15 +13,15 @@ if (!sliderStyleTag) {
 
 // 시간대별 linear-gradient + 글자색/그림자
 const gradients = [
-  { startHour: 5,  gradient: "linear-gradient(0deg, rgba(255, 214, 252, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 209, 255, 1) 17%, rgb(0 187 255) 65%)",
+  { startHour: 5,  gradient: "linear-gradient(0deg, rgba(255, 204, 251, 1) 0%, rgba(216, 209, 255, 1) 17%, rgba(0, 187, 255, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" }, // dawn
-  { startHour: 7,  gradient: "linear-gradient(0deg, rgb(238 255 165) 0%, rgba(255, 255, 255, 1) 9%, rgba(244, 250, 225, 1) 18%, rgba(33, 214, 255, 1) 65%)",
-    color: "black", textShadow: "0 0 6px #ffffff" }, // morning
-  { startHour: 12, gradient: "linear-gradient(0deg,rgba(0, 251, 255, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 249, 255, 1) 18%, rgba(0, 220, 255, 1) 65%)",
-    color: "black", textShadow: "0 0 6px #ffffff" }, // noon
-  { startHour: 17, gradient: "linear-gradient(0deg, rgb(255 197 197) 0%, rgb(253 219 204) 9%, rgb(241 216 255) 18%, rgb(50 174 255) 65%)",
+  { startHour: 7,  gradient: "linear-gradient(0deg, rgba(117, 255, 154, 1) 0%, rgba(127, 254, 252, 1) 18%, rgba(33, 214, 255, 1) 65%)",
+    color: "white", textShadow: "0 0 6px #ffffff" }, // morning
+  { startHour: 12, gradient: "linear-gradient(0deg,rgba(0, 225, 255, 1) 0%, rgba(169, 242, 255, 1) 18%, rgba(0, 220, 255, 1) 65%)",
+    color: "white", textShadow: "0 0 6px #ffffff" }, // noon
+  { startHour: 17, gradient: "linear-gradient(0deg, rgba(255, 197, 197, 1) 0%, rgba(253, 219, 204, 1) 9%, rgba(241, 216, 255, 1) 18%, rgba(50, 174, 255, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" }, // evening
-  { startHour: 20, gradient: "linear-gradient(0deg, rgb(255 115 255) 0%, rgb(199 138 244) 9%, rgb(142 108 255) 17%, rgb(22 9 108) 65%)",
+  { startHour: 20, gradient: "linear-gradient(0deg, rgba(255, 115, 255, 1) 0%, rgba(199, 138, 244, 1) 9%, rgba(142, 108, 255, 1) 17%, rgba(22, 9, 108, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" } // night
 ];
 
