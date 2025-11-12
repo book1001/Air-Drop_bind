@@ -289,5 +289,54 @@ saveBtn.addEventListener("click", async () => {
   saveBtn.textContent = "Processing...";
   await savePDFwithCover();
   saveBtn.disabled = false;
-  saveBtn.textContent = "Saved";
+
+  // 현재 시간을 HH:MM 형식으로 표시 (24시간제)
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const formattedTime = `${hours}:${minutes}`;
+
+  saveBtn.textContent = `Bound at ${formattedTime}`;
 });
+
+
+// saveBtn.addEventListener("click", async () => {
+//   saveBtn.disabled = true;
+//   saveBtn.textContent = "Processing...";
+//   await savePDFwithCover();
+//   saveBtn.disabled = false;
+
+//   // 현재 날짜를 MM/DD/YYYY 형식으로 표시 (미국식)
+//   const now = new Date();
+//   const month = String(now.getMonth() + 1).padStart(2, "0"); // 월(0~11) → 두 자리로
+//   const day = String(now.getDate()).padStart(2, "0");        // 일 → 두 자리로
+//   const year = now.getFullYear();
+//   const formattedDate = `${month}/${day}/${year}`;
+
+//   saveBtn.textContent = `Bound on ${formattedDate}`;
+// });
+
+// saveBtn.addEventListener("click", async () => {
+//   saveBtn.disabled = true;
+//   saveBtn.textContent = "Processing...";
+//   await savePDFwithCover();
+//   saveBtn.disabled = false;
+
+//   // 현재 날짜를 'Mon DD, YYYY' 형식으로 변환
+//   const now = new Date();
+//   const formattedDate = now.toLocaleDateString("en-US", {
+//     month: "short",
+//     day: "numeric",
+//     year: "numeric"
+//   });
+
+//   saveBtn.textContent = `Bound on ${formattedDate}`;
+// });
+
+// saveBtn.addEventListener("click", async () => {
+//   saveBtn.disabled = true;
+//   saveBtn.textContent = "Processing...";
+//   await savePDFwithCover();
+//   saveBtn.disabled = false;
+//   saveBtn.textContent = "Saved";
+// });

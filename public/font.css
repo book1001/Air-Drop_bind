@@ -70,7 +70,7 @@
   color: yellow;
   text-shadow: 0 0px 6px yellow;
   text-decoration: none;
-   background: #ffffff !important;
+  background: #ffffff !important;
   /* color: #000000 !important;
   background: #ffffff !important; */
 }
@@ -80,9 +80,20 @@
   color: yellow;
   text-shadow: 0 0px 6px yellow;
   text-decoration: none;
-   background: #ffffff !important;
+  background: #ffffff !important;
   /* color: #000000 !important;
   background: #ffffff !important; */
+}
+
+a {
+  color: white;
+  text-shadow: 0 0px 6px yellow;
+  text-decoration: none;
+}
+
+#copyright {
+  text-shadow: 0 0px 6px rgb(76, 255, 100);
+  text-decoration: none;
 }
 
 .material-symbols-outlined {
@@ -98,6 +109,6 @@ h1 {
   margin-block-start: 0;
   margin-block-end: 0.67em;
   font-family: 'ReadyActive-light', sans-serif;
-  font-size: 65px;
-  /* font-size: 75px; */
+  /* font-size: 65px; */
+  font-size: 75px;
 }

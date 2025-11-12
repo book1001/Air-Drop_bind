@@ -1,5 +1,7 @@
 function scaleInputs() {
   const wrapper = document.getElementById("pages-scale");
+  const coverFront = document.getElementById("cover-front");
+  const coverBack = document.getElementById("cover-back");
   const pages = document.getElementById("pages");
 
   const wrapperW = wrapper.clientWidth;
@@ -16,7 +18,10 @@ function scaleInputs() {
     scale = 1;
   }
 
+  coverFront.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  coverBack.style.transform = `translate(-50%, -50%) scale(${scale})`;
   pages.style.transform = `scale(${scale})`;
+  pageIndicator.style.transform = `translateX(-50%) scale(${scale})`;
 }
 
 window.addEventListener("resize", scaleInputs);
