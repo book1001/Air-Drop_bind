@@ -19,12 +19,9 @@ const gradients = [
   { startHour: 17, gradient: "linear-gradient(0deg, rgb(255 197 197) 0%, rgb(253 219 204) 9%, rgb(241 216 255) 18%, rgb(50 174 255) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff", 
     iconColor: "white", dropShadow: "drop-shadow(0 0 6px white)" },
-  { startHour: 20, gradient: "linear-gradient(0deg,rgba(0, 251, 255, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 249, 255, 1) 18%, rgba(0, 220, 255, 1) 65%)",
-    color: "black", textShadow: "0 0 6px #ffffff", 
-    iconColor: "black", dropShadow: "drop-shadow(0 0 6px white)" }
-  // { startHour: 20, gradient: "linear-gradient(0deg, rgb(255 115 255) 0%, rgb(199 138 244) 9%, rgb(142 108 255) 17%, rgb(22 9 108) 65%)",
-  //   color: "white", textShadow: "0 0 6px #ffffff", 
-  //   iconColor: "white", dropShadow: "drop-shadow(0 0 6px white)" }
+  { startHour: 20, gradient: "linear-gradient(0deg, rgb(255 115 255) 0%, rgb(199 138 244) 9%, rgb(142 108 255) 17%, rgb(22 9 108) 65%)",
+    color: "white", textShadow: "0 0 6px #ffffff", 
+    iconColor: "white", dropShadow: "drop-shadow(0 0 6px white)" }
 ];
 
 function getCurrentGradient(hour){
