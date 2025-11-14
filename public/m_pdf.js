@@ -1,3 +1,17 @@
+// function getCurrentDateTimeString() {
+//   const now = new Date();
+
+//   const pad = (n) => n.toString().padStart(2, "0");
+
+//   const month = pad(now.getMonth() + 1);
+//   const day = pad(now.getDate());
+//   const year = now.getFullYear();
+//   const hours = pad(now.getHours());
+//   const minutes = pad(now.getMinutes());
+
+//   return `${month}/${day}/${year} ${hours}:${minutes}`;
+// }
+
 function getCurrentDateTimeString() {
   const now = new Date();
 
@@ -6,11 +20,18 @@ function getCurrentDateTimeString() {
   const month = pad(now.getMonth() + 1);
   const day = pad(now.getDate());
   const year = now.getFullYear();
-  const hours = pad(now.getHours());
+
+  let hours = now.getHours(); 
   const minutes = pad(now.getMinutes());
 
-  return `${month}/${day}/${year} ${hours}:${minutes}`;
+  // 12시간제로 변환
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const hourStr = pad(hours);
+
+  return `${month}/${day}/${year} ${hourStr}:${minutes}`;
 }
+
 
 const saveBtn = document.getElementById("saveBtn");
 const totalBodyPages = 64;
@@ -154,6 +175,21 @@ async function savePDFwithCover() {
   pdf.save("BindTheAir.pdf");
 }
 
+// saveBtn.addEventListener("click", async () => {
+//   saveBtn.disabled = true;
+//   saveBtn.textContent = "Processing...";
+//   await savePDFwithCover();
+//   saveBtn.disabled = false;
+
+//   const now = new Date();
+//   const hours = String(now.getHours()).padStart(2, "0");
+//   const minutes = String(now.getMinutes()).padStart(2, "0");
+//   const formattedTime = `${hours}:${minutes}`;
+
+//   saveBtn.textContent = `Bound at ${formattedTime}`;
+// });
+
+
 saveBtn.addEventListener("click", async () => {
   saveBtn.disabled = true;
   saveBtn.textContent = "Processing...";
@@ -161,10 +197,12 @@ saveBtn.addEventListener("click", async () => {
   saveBtn.disabled = false;
 
   const now = new Date();
-  const hours = String(now.getHours()).padStart(2, "0");
+  let hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, "0");
-  const formattedTime = `${hours}:${minutes}`;
 
-  saveBtn.textContent = `Bound at ${formattedTime}`;
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const hourStr = String(hours).padStart(2, "0");
+
+  saveBtn.textContent = `Bound at ${hourStr}:${minutes}`;
 });
-

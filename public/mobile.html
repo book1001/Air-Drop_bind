@@ -54,6 +54,26 @@
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   const year = now.getFullYear();
+
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+
+  // 12시간제로 변환
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  const hourStr = String(hours).padStart(2, "0");
+
+  const formattedDateTime = `${month}/${day}/${year} ${hourStr}:${minutes}`;
+
+  const creditText = document.getElementById("copyright");
+  creditText.innerHTML = `${formattedDateTime}`;
+</script>
+
+<!-- <script>
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const year = now.getFullYear();
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
 
@@ -61,7 +81,7 @@
 
   const creditText = document.getElementById("copyright");
   creditText.innerHTML = `${formattedDateTime}`;
-</script>
+</script> -->
 
 <button id="prevBtn"></button>
 <button id="nextBtn"></button>

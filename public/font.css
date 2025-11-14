@@ -79,12 +79,12 @@
 
 a {
   color: white;
-  text-shadow: 0 0 6px white;
+  /* text-shadow: 0 0 6px white; */
   text-decoration: none;
 }
 
 #copyright {
-  text-shadow: 0 0 6px white;
+  /* text-shadow: 0 0 6px white; */
   text-decoration: none;
 }
 
