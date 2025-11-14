@@ -2,7 +2,6 @@ const letters = ['B','I','N','D','T','H','E','A','I','R'];
 const letterElems = [];
 const maxVisible = 3;
 
-// 글자 요소 생성
 letters.forEach(l => {
     const span = document.createElement('span');
     span.className = 'floater';
@@ -12,14 +11,13 @@ letters.forEach(l => {
     letterElems.push({
         el: span,
         rotationY: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 2, // y축 회전 속도
+        rotationSpeed: (Math.random() - 0.5) * 2, 
         opacity: 0,
-        state: 'idle', // idle, fadeIn, visible, fadeOut
+        state: 'idle', 
         waitTime: 0
     });
 });
 
-// 랜덤 글자 활성화 함수
 function activateRandomLetter() {
     const inactive = letterElems.filter(obj => obj.state === 'idle');
     if (inactive.length === 0) return;
@@ -30,26 +28,22 @@ function activateRandomLetter() {
     const obj = inactive[Math.floor(Math.random() * inactive.length)];
     obj.state = 'fadeIn';
     obj.opacity = 0;
-    obj.waitTime = Math.random() * 60 + 30; // visible 유지 시간
+    obj.waitTime = Math.random() * 60 + 30; 
     obj.el.style.left = `${Math.random() * window.innerWidth}px`;
     obj.el.style.top = `${Math.random() * window.innerHeight}px`;
 }
 
-// 애니메이션 루프
 function animate() {
     requestAnimationFrame(animate);
 
-    // 랜덤 글자 활성화
     activateRandomLetter();
 
     letterElems.forEach(obj => {
         const el = obj.el;
 
-        // y축 회전
         obj.rotationY += obj.rotationSpeed;
         el.style.transform = `rotateY(${obj.rotationY}deg)`;
 
-        // 상태별 opacity
         if (obj.state === 'fadeIn') {
             obj.opacity += 0.02;
             if (obj.opacity >= 1) {

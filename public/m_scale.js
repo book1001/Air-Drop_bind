@@ -7,13 +7,11 @@ function scaleInputs() {
   const wrapperW = wrapper.clientWidth;
   const wrapperH = wrapper.clientHeight;
 
-  // base device size
   const baseDeviceW = 375;
   const baseDeviceH = 667;
 
   let scale = Math.min(wrapperW / baseDeviceW, wrapperH / baseDeviceH);
 
-  // 기준 기기보다 작을 경우 scale이 줄어드는 것을 방지
   if (wrapperW <= baseDeviceW && wrapperH <= baseDeviceH) {
     scale = 1;
   }

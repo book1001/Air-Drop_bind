@@ -12,15 +12,15 @@ if (!sliderStyleTag) {
 
 const gradients = [
   { startHour: 5,  gradient: "linear-gradient(0deg, rgba(255, 204, 251, 1) 0%, rgba(216, 209, 255, 1) 17%, rgba(0, 187, 255, 1) 65%)",
-    color: "white", textShadow: "0 0 6px #ffffff" }, // dawn
+    color: "white", textShadow: "0 0 6px #ffffff" }, 
   { startHour: 7,  gradient: "linear-gradient(0deg, rgba(117, 255, 154, 1) 0%, rgba(127, 254, 252, 1) 18%, rgba(33, 214, 255, 1) 65%)",
-    color: "white", textShadow: "0 0 6px #ffffff" }, // morning
+    color: "white", textShadow: "0 0 6px #ffffff" }, 
   { startHour: 12, gradient: "linear-gradient(0deg,rgba(0, 225, 255, 1) 0%, rgba(169, 242, 255, 1) 18%, rgba(0, 220, 255, 1) 65%)",
-    color: "white", textShadow: "0 0 6px #ffffff" }, // noon
+    color: "white", textShadow: "0 0 6px #ffffff" }, 
   { startHour: 17, gradient: "linear-gradient(0deg, rgba(255, 197, 197, 1) 0%, rgba(253, 219, 204, 1) 9%, rgba(241, 216, 255, 1) 18%, rgba(50, 174, 255, 1) 65%)",
-    color: "white", textShadow: "0 0 6px #ffffff" }, // evening
+    color: "white", textShadow: "0 0 6px #ffffff" }, 
   { startHour: 20, gradient: "linear-gradient(0deg, rgba(255, 115, 255, 1) 0%, rgba(199, 138, 244, 1) 9%, rgba(142, 108, 255, 1) 17%, rgba(22, 9, 108, 1) 65%)",
-    color: "white", textShadow: "0 0 6px #ffffff" } // night
+    color: "white", textShadow: "0 0 6px #ffffff" }
 ];
 
 function getCurrentGradient(hour){
@@ -50,20 +50,16 @@ function updateBackground(){
 
   bg.style.background = current.gradient;
   pageSlider.style.background = current.color;
-  // info.style.color = current.color;
-  // info.style.textShadow = current.textShadow;
 
   variBtns.forEach(btn => {
     btn.style.color = current.color;
     btn.style.webkitTextFillColor = current.color;
-    // btn.style.textShadow = current.textShadow;
   });
 
   variBgs.forEach(bg => {
     bg.style.background = current.color;
   });
 
-  // input[type="range"] thumb
   if(pageSlider){
     sliderStyleTag.innerHTML = `
       #pageSlider::-webkit-slider-thumb {
