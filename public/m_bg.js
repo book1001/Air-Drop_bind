@@ -19,8 +19,10 @@ const gradients = [
     color: "white", textShadow: "0 0 6px #ffffff" }, 
   { startHour: 17, gradient: "linear-gradient(0deg, rgba(255, 197, 197, 1) 0%, rgba(253, 219, 204, 1) 9%, rgba(241, 216, 255, 1) 18%, rgba(50, 174, 255, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" }, 
-  { startHour: 20, gradient: "linear-gradient(0deg, rgba(255, 115, 255, 1) 0%, rgba(199, 138, 244, 1) 9%, rgba(142, 108, 255, 1) 17%, rgba(22, 9, 108, 1) 65%)",
+  { startHour: 20, gradient: "linear-gradient(0deg,rgba(0, 225, 255, 1) 0%, rgba(169, 242, 255, 1) 18%, rgba(0, 220, 255, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" }
+  // { startHour: 20, gradient: "linear-gradient(0deg, rgba(255, 115, 255, 1) 0%, rgba(199, 138, 244, 1) 9%, rgba(142, 108, 255, 1) 17%, rgba(22, 9, 108, 1) 65%)",
+  //   color: "white", textShadow: "0 0 6px #ffffff" }
 ];
 
 function getCurrentGradient(hour){
