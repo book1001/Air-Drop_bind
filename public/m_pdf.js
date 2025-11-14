@@ -3,7 +3,7 @@ function getCurrentDateTimeString() {
 
   const pad = (n) => n.toString().padStart(2, "0");
 
-  const month = pad(now.getMonth() + 1); // 월은 0~11
+  const month = pad(now.getMonth() + 1);
   const day = pad(now.getDate());
   const year = now.getFullYear();
   const hours = pad(now.getHours());
@@ -13,7 +13,7 @@ function getCurrentDateTimeString() {
 }
 
 const saveBtn = document.getElementById("saveBtn");
-const totalBodyPages = 64; // JSON 페이지 수
+const totalBodyPages = 64;
 
 const coverTitle = `
 Bind the
@@ -68,7 +68,7 @@ async function loadPageJSON(pageNumber) {
 function getFontForText(text) {
   if (/[\uAC00-\uD7A3]/.test(text)) return "NotoSansKR";   // 한글
   if (/[\u4E00-\u9FFF]/.test(text)) return "NotoSansSC";   // 중국어
-  return "ABCOracle";                                       // 영어/기타
+  return "ABCOracle";                                      // 영어/기타
 }
 
 function formatTextForPDF(text) {
@@ -94,8 +94,8 @@ async function savePDFwithCover() {
   const cellHeight = 27;
   const startY = 55;
 
-  const marginX = 0;                                // ✅ 좌우 마진
-  const textWidth = pageWidth - marginX * 2;         // ✅ 사용 가능한 폭
+  const marginX = 0;                                // 좌우 마진
+  const textWidth = pageWidth - marginX * 2;        // 사용 가능한 폭
 
   // --------------------------
   // 폰트 등록
@@ -110,19 +110,23 @@ async function savePDFwithCover() {
   // pdf.addFont("font/ABCOracle-Bold.ttf", "ABCOracle", "normal");
 
 
-//   pdf.setFillColor("#00dcff");     // ✅ HEX 사용
+//   pdf.setFillColor("#00dcff");     // HEX 사용
 //   pdf.rect(0, 0, pageWidth, pageHeight, "F");
-//   // --------------------------
-//   // 1️⃣ 표지
-//   // --------------------------
+
+
+  // --------------------------
+  // 1. Cover
+  // --------------------------
   const coverImg = new Image();
-  coverImg.src = "pdf/cover-01.png"; // 커버 이미지 파일
+  coverImg.src = "pdf/cover-01.png";
   await new Promise((resolve) => {
     coverImg.onload = () => {
-      pdf.addImage(coverImg, "PNG", 0, 0, pageWidth, pageHeight); // 마진 없이 꽉 채움
+      pdf.addImage(coverImg, "PNG", 0, 0, pageWidth, pageHeight);
       resolve();
     };
   });
+
+
 //   let currentY = startY;
 
 //   // ✅ 1. Cover Title
@@ -200,7 +204,7 @@ async function savePDFwithCover() {
   // });
 
   // --------------------------
-  // 2️⃣ JSON 페이지
+  // 2. Body Pages
   // --------------------------
   for (let page = 1; page <= totalBodyPages; page++) {
     pdf.addPage();
@@ -265,7 +269,7 @@ async function savePDFwithCover() {
   // }
 
   // --------------------------
-  // 3️⃣ 뒷표지
+  // 3. Cover: back
   // --------------------------
   // pdf.addPage();
   // const backImg = new Image();
@@ -327,7 +331,6 @@ saveBtn.addEventListener("click", async () => {
   await savePDFwithCover();
   saveBtn.disabled = false;
 
-  // 현재 시간을 HH:MM 형식으로 표시 (24시간제)
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");

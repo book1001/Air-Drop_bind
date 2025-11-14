@@ -123,7 +123,7 @@
     pointer-events: auto;
     outline: none;
 
-    /* ✨ 핵심: 흐림 제거 */
+    /* 흐림 제거 */
     -webkit-font-smoothing: none !important;
     text-rendering: geometricPrecision;
     filter: none;
@@ -172,7 +172,7 @@
     pointer-events: auto;
     outline: none;
 
-    /* ✨ 핵심: 흐림 제거 */
+    /* 흐림 제거 */
     -webkit-font-smoothing: none !important;
     text-rendering: geometricPrecision;
     filter: none;
@@ -371,7 +371,7 @@
     let cloudSouth;
 
 
-    // ✅ 드래그 상태 변수
+    // 드래그 상태 변수
     let isDragging = false;
     let prevMouseX = 0;
     let prevMouseY = 0;
@@ -521,7 +521,7 @@
 
 
 
-      // clouds (남극만 예시 - 북극은 주석 처리 가능)
+      // cloud
       gltfLoader.load('model/cloud.glb', (gltf) => {
         cloudSouth = gltf.scene;
         cloudSouth.traverse((child)=>{ if(child.isMesh){ child.material = new THREE.MeshBasicMaterial({ map: child.material.map, side: THREE.DoubleSide, transparent: true, opacity: 0.8, depthWrite:false, alphaTest:0.5 }); }});

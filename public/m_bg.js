@@ -10,8 +10,6 @@ if (!sliderStyleTag) {
   document.head.appendChild(sliderStyleTag);
 }
 
-
-// 시간대별 linear-gradient + 글자색/그림자
 const gradients = [
   { startHour: 5,  gradient: "linear-gradient(0deg, rgba(255, 204, 251, 1) 0%, rgba(216, 209, 255, 1) 17%, rgba(0, 187, 255, 1) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff" }, // dawn
@@ -50,13 +48,11 @@ function updateBackground(){
   const hour = now.getHours() + now.getMinutes()/60;
   const current = getCurrentGradient(hour);
 
-  // 배경 & 글자
   bg.style.background = current.gradient;
   pageSlider.style.background = current.color;
   // info.style.color = current.color;
   // info.style.textShadow = current.textShadow;
 
-  // variBtns 글자 색
   variBtns.forEach(btn => {
     btn.style.color = current.color;
     btn.style.webkitTextFillColor = current.color;
@@ -67,7 +63,7 @@ function updateBackground(){
     bg.style.background = current.color;
   });
 
-  // input[type="range"] thumb 색상 적용
+  // input[type="range"] thumb
   if(pageSlider){
     sliderStyleTag.innerHTML = `
       #pageSlider::-webkit-slider-thumb {
@@ -82,57 +78,4 @@ function updateBackground(){
   setTimeout(updateBackground, getNextChangeTime());
 }
 
-// 바로 실행
 updateBackground();
-
-
-// function getNextChangeTime(){
-//   const now = new Date();
-//   let nextHour = 24;
-//   const currentHour = now.getHours() + now.getMinutes()/60;
-
-//   for(let i=0; i<gradients.length; i++){
-//     if(gradients[i].startHour > currentHour){
-//       nextHour = gradients[i].startHour;
-//       break;
-//     }
-//   }
-//   if(nextHour <= currentHour) nextHour += 24; // 다음 날로 넘어가는 경우
-
-//   const msUntilNext = (nextHour - currentHour) * 60 * 60 * 1000;
-//   return msUntilNext;
-// }
-
-// function updateBackground(){
-//   const now = new Date();
-//   const hour = now.getHours() + now.getMinutes()/60;
-
-//   // 현재 시간대 gradient 찾기
-//   let current = gradients[gradients.length-1]; // 기본: 마지막 (night)
-//   for(let i=0; i<gradients.length; i++){
-//     let next = gradients[(i+1)%gradients.length];
-//     if(hour >= gradients[i].startHour && hour < next.startHour){
-//       current = gradients[i];
-//       break;
-//     }
-//   }
-
-//   bg.style.background = current.gradient;
-//   info.style.color = current.color;
-//   info.style.textShadow = current.textShadow;
-
-//   // 각 요소에 -webkit-text-fill-color 적용
-//   variBtns.forEach(btn => {
-//     // current.color를 적용한다고 가정
-//     btn.style.color = current.color;
-//     btn.style.webkitTextFillColor = current.color;
-//     btn.style.textShadow = current.textShadow;
-//     // 또는 setProperty 방식
-//     // btn.style.setProperty('-webkit-text-fill-color', current.color);
-//   });
-
-//   // 다음 시간대에 맞춰 다시 호출
-//   setTimeout(updateBackground, getNextChangeTime());
-// }
-
-// updateBackground();

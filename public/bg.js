@@ -6,7 +6,6 @@ const icons = [
   { id: "icon_arrows", src: "icon/icon_arrows2.svg" }
 ];
 
-// 시간대별 linear-gradient + 글자색/그림자
 const gradients = [
   { startHour: 5,  gradient: "linear-gradient(0deg, rgba(255, 214, 252, 1) 0%, rgba(255, 255, 255, 1) 9%, rgba(216, 209, 255, 1) 17%, rgb(0 187 255) 65%)",
     color: "white", textShadow: "0 0 6px #ffffff", 
@@ -50,12 +49,11 @@ function updateBackground(){
   const hour = now.getHours() + now.getMinutes()/60;
   const current = getCurrentGradient(hour);
 
-  // 배경 & 글자
   bg.style.background = current.gradient;
   info.style.color = current.color;
   info.style.textShadow = current.textShadow;
 
-  // SVG 아이콘 색상 & drop-shadow
+  // SVG
   icons.forEach(icon => {
     const container = document.getElementById(icon.id);
     if(container){

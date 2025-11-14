@@ -7,7 +7,7 @@ function scaleInputs() {
   const wrapperW = wrapper.clientWidth;
   const wrapperH = wrapper.clientHeight;
 
-  // 기준 디바이스 크기
+  // base device size
   const baseDeviceW = 375;
   const baseDeviceH = 667;
 

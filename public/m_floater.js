@@ -49,7 +49,7 @@ function animate() {
         obj.rotationY += obj.rotationSpeed;
         el.style.transform = `rotateY(${obj.rotationY}deg)`;
 
-        // 상태별 opacity 처리
+        // 상태별 opacity
         if (obj.state === 'fadeIn') {
             obj.opacity += 0.02;
             if (obj.opacity >= 1) {
@@ -73,7 +73,7 @@ function animate() {
 
 animate();
 
-// 창 크기 변경 대응
+
 window.addEventListener('resize', () => {
     letterElems.forEach(obj => {
         obj.el.style.left = `${Math.random() * window.innerWidth}px`;
